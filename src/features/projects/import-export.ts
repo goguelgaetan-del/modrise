@@ -4,10 +4,11 @@
  */
 import type { ModriseProject } from '@/core/project/types';
 import {
-  parseProjectFile,
+  parseProjectFileWithWarnings,
   PROJECT_FILE_EXTENSION,
   serializeProject,
 } from '@/core/serialization/file-format';
+import type { ParsedProjectFile } from '@/core/serialization/file-format';
 import { slugify } from '@/lib/slugify';
 
 /** Nom de fichier proposé à l'export : nom du projet en minuscules + extension. */
@@ -25,8 +26,12 @@ export function downloadProjectFile(project: ModriseProject): void {
   URL.revokeObjectURL(url);
 }
 
-/** Lit et valide un fichier importé ; lève `FileFormatError` en cas de problème. */
-export async function readProjectFile(file: File): Promise<ModriseProject> {
+/**
+ * Lit et valide un fichier importé ; lève `FileFormatError` en cas de problème.
+ * `warnings` signale les champs invalides silencieusement remplacés par une
+ * valeur par défaut (ex. dialecte SQL inconnu → PostgreSQL).
+ */
+export async function readProjectFile(file: File): Promise<ParsedProjectFile> {
   const content = await file.text();
-  return parseProjectFile(content);
+  return parseProjectFileWithWarnings(content);
 }

@@ -23,6 +23,7 @@ import {
 import { createId } from '@/core/id';
 import type { ModriseProject, ProjectSettings } from '@/core/project/types';
 import { createProject } from '@/core/project/types';
+import type { SqlDialectId } from '@/core/sql/dialect';
 
 export interface AttributePatch {
   name?: string;
@@ -44,6 +45,7 @@ interface ProjectState {
 
   loadProject: (project: ModriseProject) => void;
   renameProject: (name: string) => void;
+  setSqlDialect: (dialectId: SqlDialectId) => void;
 
   addEntity: () => Entity;
   updateEntity: (entityId: string, patch: { name?: string; description?: string }) => void;
@@ -120,6 +122,13 @@ export const useProjectStore = create<ProjectState>()(
       renameProject: (name) => {
         set((state) => {
           state.name = name;
+          touch(state);
+        });
+      },
+
+      setSqlDialect: (dialectId) => {
+        set((state) => {
+          state.settings.sqlDialect = dialectId;
           touch(state);
         });
       },
