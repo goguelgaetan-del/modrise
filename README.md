@@ -13,7 +13,7 @@ Modrise permet de concevoir des modèles conceptuels de données (MCD), de gén�
 - Un **format de fichier ouvert et versionné** (`.merise.json`) avec migrations.
 - Un vrai produit logiciel : typé strictement, testé, documenté, évolutif.
 
-## Fonctionnalités disponibles (v0.1)
+## Fonctionnalités disponibles (v0.1 + v0.2)
 
 - Création graphique d'entités et d'associations (React Flow).
 - Attributs typés (integer, bigint, decimal, varchar, text, boolean, date, datetime, uuid) avec obligatoire / unique.
@@ -21,6 +21,7 @@ Modrise permet de concevoir des modèles conceptuels de données (MCD), de gén�
 - Participations créées en traçant un lien entité ↔ association, cardinalités Merise (0,1 / 1,1 / 0,N / 1,N) et rôles.
 - Associations binaires, n-aires et réflexives ; attributs portés par une association.
 - Validation en continu (erreurs et avertissements Merise/SQL) avec sélection et recentrage de l'élément concerné.
+- **Transformation MCD → MLD** (onglet « MLD ») : entités → tables, identifiants simples/composés/alternatifs → clés primaires/contraintes uniques, associations 1,N / N,N / 1,1 / réflexives / n-aires → clés étrangères ou tables associatives, nommage déterministe avec résolution de collisions. Recalculée automatiquement à chaque modification du MCD ; bloquée tant que le MCD contient des erreurs. Voir [docs/logical-transformation.md](docs/logical-transformation.md).
 - Suppression protégée : une entité référencée n'est jamais supprimée silencieusement.
 - Sauvegarde automatique dans IndexedDB (statut affiché), rechargement du dernier projet.
 - Import / export `.merise.json` validé par Zod, avec messages d'erreur clairs.
@@ -28,8 +29,7 @@ Modrise permet de concevoir des modèles conceptuels de données (MCD), de gén�
 
 ## Fonctionnalités prévues
 
-- v0.2 : transformation MCD → MLD et affichage du modèle logique.
-- v0.3 : génération SQL (PostgreSQL, MySQL/MariaDB, SQLite) et export `.sql`.
+- v0.3 : génération SQL (PostgreSQL, MySQL/MariaDB, SQLite) et export `.sql`, à partir du modèle logique déjà produit.
 - v0.4 : annuler/rétablir, copier-coller, duplication, export PNG/SVG.
 - Ensuite : application desktop Tauri, rétro-ingénierie SQL, héritage Merise, MCT, collaboration… (voir [docs/roadmap.md](docs/roadmap.md)).
 

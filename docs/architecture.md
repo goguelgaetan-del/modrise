@@ -26,7 +26,9 @@ src/
 │   ├── project/            # ModriseProject, ProjectSettings, fabrique
 │   ├── validation/         # validateConceptualModel + codes de règles
 │   ├── logical-model/      # LogicalModel (tables, colonnes, FK, contraintes)
-│   ├── transformations/    # transformToLogicalModel (TODO v0.2, règles documentées)
+│   ├── transformations/    # transformToLogicalModel : entités, 1,N, 1,1,
+│   │                       # N,N/n-aire, nommage déterministe (voir
+│   │                       # docs/logical-transformation.md)
 │   ├── sql/                # interface SqlDialect (impl. v0.3), nommage SQL,
 │   │                       # mots réservés
 │   ├── serialization/      # format .merise.json : serialize / parse (Zod)
@@ -49,6 +51,7 @@ src/
 │   ├── entities/           # inspecteur d'entité
 │   ├── associations/       # inspecteur d'association
 │   ├── validation/         # panneau de validation, ancrage des problèmes
+│   ├── logical-model/      # useLogicalModel (hook dérivé mémoïsé), panneau MLD
 │   └── projects/           # import / export de fichiers
 ├── components/
 │   ├── layout/             # TopBar, SidebarLeft, InspectorPanel, BottomPanel
@@ -82,6 +85,13 @@ src/
 - La validation est recalculée de manière mémoïsée à chaque changement du
   modèle conceptuel et alimente à la fois le panneau de validation et la mise
   en évidence des nœuds/arêtes en erreur.
+- Le **modèle logique (MLD)** est une **vue dérivée**, jamais une seconde
+  source de vérité : `useLogicalModel` recalcule `transformToLogicalModel`
+  via `useMemo` à chaque changement du modèle conceptuel ou de la convention
+  de nommage, et n'est stocké dans aucun store. La transformation appelle le
+  moteur de validation existant et refuse de produire un MLD tant que le MCD
+  contient des erreurs bloquantes ; le panneau MLD redirige alors vers
+  l'onglet de validation plutôt que de dupliquer les règles.
 
 ## Décisions structurantes
 
@@ -97,9 +107,13 @@ src/
   participations, jamais silencieusement.
 - **Import sans confiance** : fichiers importés et documents IndexedDB suivent
   le même pipeline parse → migration → validation Zod.
-- **Fonctionnalités à venir affichées honnêtement** : MLD, SQL, undo/redo et
+- **Fonctionnalités à venir affichées honnêtement** : SQL, undo/redo et
   commentaires sont présentés comme « Fonctionnalité prévue dans une prochaine
   version », jamais simulés.
+- **Nommage déterministe et sans aléatoire** : la transformation MCD → MLD ne
+  génère aucun id ni nom aléatoire ; `LogicalNameRegistry` résout les
+  collisions par suffixe numérique stable et signale chaque résolution par un
+  avertissement (jamais silencieuse).
 
 ## Extraction future en packages
 
