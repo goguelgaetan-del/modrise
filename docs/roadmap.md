@@ -33,11 +33,19 @@
       (en-tête, `DROP TABLE`, casse des mots-clés)
 - [x] Tests unitaires exhaustifs + snapshots par fixture
 
-## v0.3.2 — SQL MySQL / SQLite
+## v0.3.2 — SQL multi-dialecte (terminé)
 
-- [ ] Générateur MySQL / MariaDB
-- [ ] Générateur SQLite
-- [ ] Sélecteur de dialecte fonctionnel dans l'interface
+- [x] Moteur de génération SQL mutualisé (`src/core/sql/shared/`),
+      extrait du dialecte PostgreSQL sans changer son comportement ni ses
+      snapshots
+- [x] Générateur MySQL / MariaDB (règles documentées dans
+      [mysql-generation.md](mysql-generation.md))
+- [x] Générateur SQLite, clés étrangères inline imposées, `PRAGMA
+    foreign_keys` (règles documentées dans
+      [sqlite-generation.md](sqlite-generation.md)), validé réellement via
+      le CLI `sqlite3`
+- [x] Sélecteur de dialecte fonctionnel dans l'interface, persisté dans
+      `ProjectSettings.sqlDialect` et conservé à l'import/export
 - [ ] Coloration syntaxique du SQL (si légère)
 
 ## v0.4 — Expérience utilisateur
