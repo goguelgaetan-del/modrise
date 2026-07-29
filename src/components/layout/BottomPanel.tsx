@@ -6,6 +6,7 @@
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useUiStore } from '@/stores/ui-store';
 import type { BottomTab } from '@/stores/ui-store';
+import { LogicalModelPanel } from '@/features/logical-model/components/LogicalModelPanel';
 import { ValidationPanel } from '@/features/validation/components/ValidationPanel';
 import { useValidation } from '@/features/validation/use-validation';
 import { Badge } from '@/components/ui/badge';
@@ -58,9 +59,7 @@ export function BottomPanel() {
       {open && (
         <div className="min-h-0 flex-1">
           {bottomTab === 'validation' && <ValidationPanel />}
-          {bottomTab === 'mld' && (
-            <PlannedFeature label="La transformation MCD → MLD est prévue pour la version 0.2." />
-          )}
+          {bottomTab === 'mld' && <LogicalModelPanel />}
           {bottomTab === 'sql' && (
             <PlannedFeature label="La génération SQL (PostgreSQL, MySQL, SQLite) est prévue pour la version 0.3." />
           )}
