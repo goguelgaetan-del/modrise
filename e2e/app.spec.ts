@@ -103,3 +103,16 @@ test('protège la suppression d’une entité référencée', async ({ page }) =
   await page.getByRole('button', { name: 'Annuler' }).click();
   await expect(page.getByTestId('entity-node-CLIENT')).toBeVisible();
 });
+
+test('génère le MLD à partir du MCD et le met à jour après modification', async ({ page }) => {
+  await page.getByRole('tab', { name: 'MLD' }).click();
+  await expect(page.getByTestId('logical-model-panel')).toBeVisible();
+  await expect(page.getByTestId('logical-table-client')).toBeVisible();
+  await expect(page.getByTestId('logical-table-reservation')).toContainText('client_id_client');
+
+  // Modifier le MCD (renommer une entité) doit se répercuter sur le MLD affiché.
+  await page.getByTestId('entity-node-CLIENT').click();
+  await page.getByTestId('entity-name-input').fill('CLIENTELE');
+  await expect(page.getByTestId('logical-table-clientele')).toBeVisible();
+  await expect(page.getByTestId('logical-table-reservation')).toContainText('clientele_id_client');
+});

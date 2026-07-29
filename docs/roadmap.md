@@ -12,12 +12,15 @@
 - [ ] Gestion complète des identifiants alternatifs dans l'inspecteur
 - [ ] Nœuds de commentaire
 
-## v0.2 — Modèle logique
+## v0.2 — Modèle logique (terminé)
 
-- [ ] Transformation MCD → MLD (règles documentées dans
-      [logical-transformation.md](logical-transformation.md))
-- [ ] Affichage du modèle logique dans le panneau inférieur
-- [ ] Tests exhaustifs par type d'association (1,N / N,N / 1,1 / réflexive / n-aire)
+- [x] Transformation MCD → MLD (règles documentées dans
+      [logical-transformation.md](logical-transformation.md)) : entités,
+      identifiants simples/composés/alternatifs, 1,N, N,N, 1,1, réflexif,
+      n-aire, nommage déterministe avec résolution de collisions
+- [x] Affichage du modèle logique dans le panneau inférieur (onglet MLD),
+      recalculé automatiquement à chaque modification du MCD
+- [x] Tests exhaustifs par type d'association (1,N / N,N / 1,1 / réflexive / n-aire)
 
 ## v0.3 — SQL
 
