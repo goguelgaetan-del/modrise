@@ -16,6 +16,8 @@ export interface LogicalTable {
   name: string;
   /** Identifiants des objets conceptuels dont cette table est issue. */
   sourceIds: string[];
+  /** Description de l'entité ou de l'association d'origine (pour COMMENT ON TABLE). */
+  description?: string;
   columns: LogicalColumn[];
   /**
    * Identifiants (id) des colonnes composant la clé primaire, dans l'ordre.
@@ -36,10 +38,7 @@ export interface LogicalTable {
  *   n'est produite en v0.2).
  */
 export type LogicalColumnOrigin =
-  | 'entity-attribute'
-  | 'association-attribute'
-  | 'migrated-identifier'
-  | 'generated';
+  'entity-attribute' | 'association-attribute' | 'migrated-identifier' | 'generated';
 
 export interface LogicalColumn {
   id: string;
@@ -49,6 +48,8 @@ export interface LogicalColumn {
   /** Attribut conceptuel d'origine, si la colonne en provient directement. */
   sourceId?: string;
   origin: LogicalColumnOrigin;
+  /** Description de l'attribut d'origine (pour COMMENT ON COLUMN), si elle existe. */
+  description?: string;
 }
 
 export interface ForeignKey {
