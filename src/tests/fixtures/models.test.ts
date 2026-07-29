@@ -4,19 +4,29 @@ import {
   compositeIdentifierModel,
   invalidModel,
   manyToManyModel,
+  nameCollisionModel,
   nAryModel,
+  oneToManyCompositeKeyModel,
   oneToManyModel,
   oneToOneModel,
+  oneToOneOptionalOptionalModel,
+  oneToOneRequiredRequiredModel,
+  reflexiveManyToManyModel,
   reflexiveModel,
 } from './models';
 
 const validFixtures = [
   ['one-to-many', oneToManyModel],
+  ['one-to-many-composite-key', oneToManyCompositeKeyModel],
   ['many-to-many', manyToManyModel],
   ['one-to-one', oneToOneModel],
-  ['reflexive-association', reflexiveModel],
+  ['one-to-one-required-required', oneToOneRequiredRequiredModel],
+  ['one-to-one-optional-optional', oneToOneOptionalOptionalModel],
+  ['reflexive-one-to-many', reflexiveModel],
+  ['reflexive-many-to-many', reflexiveManyToManyModel],
   ['n-ary-association', nAryModel],
   ['composite-identifier', compositeIdentifierModel],
+  ['name-collision', nameCollisionModel],
 ] as const;
 
 describe('fixtures', () => {
