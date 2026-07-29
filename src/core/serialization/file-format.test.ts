@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { createHotelExampleProject } from '../examples/hotel';
 import { applyMigrations, MigrationError } from '../migrations';
 import type { ProjectMigration } from '../migrations';
-import { FileFormatError, parseProjectFile, serializeProject } from './file-format';
+import {
+  FileFormatError,
+  parseProjectFile,
+  parseProjectFileWithWarnings,
+  serializeProject,
+} from './file-format';
 
 describe('serializeProject / parseProjectFile', () => {
   it('réalise un aller-retour sans perte', () => {
@@ -44,6 +49,36 @@ describe('serializeProject / parseProjectFile', () => {
     const raw = JSON.parse(serializeProject(project)) as Record<string, unknown>;
     raw.formatVersion = 999;
     expect(() => parseProjectFile(JSON.stringify(raw))).toThrowError(/version 999/);
+  });
+
+  it('remplace un dialecte SQL inconnu par PostgreSQL sans faire échouer l’import', () => {
+    const project = createHotelExampleProject();
+    const raw = JSON.parse(serializeProject(project)) as {
+      settings: { sqlDialect: string };
+    };
+    raw.settings.sqlDialect = 'oracle';
+    const parsed = parseProjectFile(JSON.stringify(raw));
+    expect(parsed.settings.sqlDialect).toBe('postgresql');
+  });
+});
+
+describe('parseProjectFileWithWarnings', () => {
+  it('ne produit aucun avertissement pour un fichier valide', () => {
+    const project = createHotelExampleProject();
+    const { warnings } = parseProjectFileWithWarnings(serializeProject(project));
+    expect(warnings).toEqual([]);
+  });
+
+  it('signale le repli sur PostgreSQL pour un dialecte inconnu', () => {
+    const project = createHotelExampleProject();
+    const raw = JSON.parse(serializeProject(project)) as {
+      settings: { sqlDialect: string };
+    };
+    raw.settings.sqlDialect = 'oracle';
+    const { project: parsed, warnings } = parseProjectFileWithWarnings(JSON.stringify(raw));
+    expect(parsed.settings.sqlDialect).toBe('postgresql');
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toMatch(/oracle/);
   });
 });
 

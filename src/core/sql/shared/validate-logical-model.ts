@@ -1,11 +1,13 @@
 /**
  * Validation défensive du modèle logique avant génération SQL.
  *
- * Le MLD produit par `transformToLogicalModel` est déjà cohérent en
- * pratique, mais le générateur ne lui fait jamais une confiance aveugle :
- * un modèle malformé (construit à la main, ou par une future évolution du
- * moteur) ne doit jamais produire un script trompeur ni faire planter
- * l'application.
+ * Partagée par tous les dialectes : elle ne dépend d'aucune syntaxe
+ * spécifique (échappement, types), seulement de la cohérence structurelle
+ * du `LogicalModel` lui-même. Le MLD produit par `transformToLogicalModel`
+ * est déjà cohérent en pratique, mais aucun générateur ne lui fait jamais une
+ * confiance aveugle : un modèle malformé (construit à la main, ou par une
+ * future évolution du moteur) ne doit jamais produire un script trompeur ni
+ * faire planter l'application.
  */
 import { DATA_TYPE_KINDS } from '../../conceptual-model/data-types';
 import type { LogicalModel, LogicalTable } from '../../logical-model/types';

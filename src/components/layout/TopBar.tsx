@@ -71,12 +71,15 @@ export function TopBar() {
 
   const onImportFile = async (file: File) => {
     try {
-      const project = await readProjectFile(file);
+      const { project, warnings } = await readProjectFile(file);
       await withAutosaveSuspended(() => {
         loadProjectIntoStores(project);
       });
       await saveNow();
       notify('info', `Projet « ${project.name} » importé.`);
+      for (const warning of warnings) {
+        notify('info', warning);
+      }
       requestAnimationFrame(() => void fitView({ padding: 0.2 }));
     } catch (error) {
       notify(

@@ -1,17 +1,19 @@
 /**
- * Registre de noms de contraintes SQL, local à une génération.
+ * Registre de noms de contraintes SQL, local à une génération, partagé par
+ * tous les dialectes (seule la limite d'octets varie : 63 pour PostgreSQL,
+ * 64 pour MySQL/MariaDB, une limite large pour SQLite qui n'en impose pas de
+ * courte en pratique).
  *
- * PostgreSQL limite les identifiants à 63 octets. Les noms de clé étrangère
- * et de contrainte unique proviennent déjà, en pratique, du modèle logique
- * (déjà déduplicés par `LogicalNameRegistry` en v0.2) ; ce registre les fait
- * simplement transiter pour garantir l'unicité globale du script généré une
- * fois les noms de clé primaire (absents du MLD) ajoutés. Aucune fonction de
- * hachage n'est nécessaire : la résolution de collision utilise un suffixe
- * numérique stable, comme pour le nommage du MLD.
+ * Les noms de clé étrangère et de contrainte unique proviennent déjà, en
+ * pratique, du modèle logique (déjà déduplicés par `LogicalNameRegistry` en
+ * v0.2) ; ce registre les fait simplement transiter pour garantir l'unicité
+ * globale du script généré une fois les noms de clé primaire (absents du
+ * MLD) ajoutés. Aucune fonction de hachage n'est nécessaire : la résolution
+ * de collision utilise un suffixe numérique stable, comme pour le nommage
+ * du MLD.
  */
-const MAX_IDENTIFIER_BYTES = 63;
 /** Marge laissée pour qu'un suffixe de désambiguïsation tienne dans la limite. */
-const TRUNCATION_BYTES = 55;
+const TRUNCATION_MARGIN_BYTES = 8;
 
 function byteLength(value: string): number {
   return new TextEncoder().encode(value).length;
@@ -37,6 +39,13 @@ export interface ConstraintNameReservation {
 
 export class SqlConstraintNameRegistry {
   private readonly names = new Set<string>();
+  private readonly maxBytes: number;
+  private readonly truncationBytes: number;
+
+  constructor(maxBytes: number) {
+    this.maxBytes = maxBytes;
+    this.truncationBytes = Math.max(1, maxBytes - TRUNCATION_MARGIN_BYTES);
+  }
 
   /** Enregistre un nom déjà déterminé sans le modifier (ex. contraintes déjà nommées par le MLD). */
   claim(name: string): void {
@@ -44,7 +53,7 @@ export class SqlConstraintNameRegistry {
   }
 
   reserve(baseName: string): ConstraintNameReservation {
-    const truncatedBase = truncateToBytes(baseName, TRUNCATION_BYTES);
+    const truncatedBase = truncateToBytes(baseName, this.truncationBytes);
     const truncated = truncatedBase !== baseName;
     const baseKey = truncatedBase.toLowerCase();
 
@@ -60,10 +69,8 @@ export class SqlConstraintNameRegistry {
       candidate = `${truncatedBase}_${suffix}`;
       candidateKey = candidate.toLowerCase();
       suffix += 1;
-    } while (this.names.has(candidateKey) || byteLength(candidate) > MAX_IDENTIFIER_BYTES);
+    } while (this.names.has(candidateKey) || byteLength(candidate) > this.maxBytes);
     this.names.add(candidateKey);
     return { name: candidate, collided: true, truncated };
   }
 }
-
-export { MAX_IDENTIFIER_BYTES };

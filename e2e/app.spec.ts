@@ -173,3 +173,66 @@ test('bloque la génération SQL en présence d’erreurs bloquantes', async ({ 
   await expect(page.getByTestId('sql-preview-blocked')).toBeVisible();
   await expect(page.getByTestId('sql-code')).not.toBeVisible();
 });
+
+test('change de dialecte SQL et régénère le script correspondant', async ({ page }) => {
+  await page.getByRole('tab', { name: 'SQL' }).click();
+  await expect(page.getByTestId('sql-code')).toContainText('CREATE TABLE "client"');
+
+  await page.getByTestId('sql-dialect-select').click();
+  await page.getByRole('option', { name: 'MySQL / MariaDB' }).click();
+  await expect(page.getByTestId('sql-code')).toContainText('CREATE TABLE `client`');
+  await expect(page.getByTestId('sql-code')).toContainText('INT NOT NULL');
+
+  await page.getByTestId('sql-dialect-select').click();
+  await page.getByRole('option', { name: 'SQLite' }).click();
+  await expect(page.getByTestId('sql-code')).toContainText('PRAGMA foreign_keys = ON');
+  await expect(page.getByTestId('sql-code')).not.toContainText('ALTER TABLE');
+});
+
+test('le dialecte sélectionné est conservé après rechargement', async ({ page }) => {
+  await page.getByRole('tab', { name: 'SQL' }).click();
+  await page.getByTestId('sql-dialect-select').click();
+  await page.getByRole('option', { name: 'MySQL / MariaDB' }).click();
+  await waitForSaved(page);
+
+  await page.reload();
+  await page.getByRole('tab', { name: 'SQL' }).click();
+  await expect(page.getByTestId('sql-dialect-select')).toContainText('MySQL / MariaDB');
+  await expect(page.getByTestId('sql-code')).toContainText('CREATE TABLE `client`');
+});
+
+test('télécharge le SQL avec le nom correspondant à chaque dialecte', async ({ page }) => {
+  await page.getByRole('tab', { name: 'SQL' }).click();
+
+  await page.getByTestId('sql-dialect-select').click();
+  await page.getByRole('option', { name: 'MySQL / MariaDB' }).click();
+  const mysqlDownloadPromise = page.waitForEvent('download');
+  await page.getByTestId('sql-download-button').click();
+  expect((await mysqlDownloadPromise).suggestedFilename()).toBe('gestion-d-hotel.mysql.sql');
+
+  await page.getByTestId('sql-dialect-select').click();
+  await page.getByRole('option', { name: 'SQLite' }).click();
+  const sqliteDownloadPromise = page.waitForEvent('download');
+  await page.getByTestId('sql-download-button').click();
+  expect((await sqliteDownloadPromise).suggestedFilename()).toBe('gestion-d-hotel.sqlite.sql');
+});
+
+test('l’import/export conserve le dialecte sélectionné', async ({ page }) => {
+  await page.getByRole('tab', { name: 'SQL' }).click();
+  await page.getByTestId('sql-dialect-select').click();
+  await page.getByRole('option', { name: 'SQLite' }).click();
+  await waitForSaved(page);
+
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByTestId('export-button').click();
+  const filePath = await (await downloadPromise).path();
+
+  await page.getByRole('button', { name: 'Nouveau' }).click();
+  await page.getByRole('menuitem', { name: 'Projet vide' }).click();
+
+  await page.getByTestId('import-file-input').setInputFiles(filePath);
+  await expect(page.getByTestId('project-name-input')).toHaveValue("Gestion d'hôtel");
+
+  await page.getByRole('tab', { name: 'SQL' }).click();
+  await expect(page.getByTestId('sql-dialect-select')).toContainText('SQLite');
+});

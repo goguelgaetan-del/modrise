@@ -129,3 +129,69 @@ describe('SqlPreviewPanel', () => {
     expect(screen.getByTestId('sql-code')).toHaveTextContent('CREATE TABLE "article"');
   });
 });
+
+describe('SqlPreviewPanel — sélecteur de dialecte', () => {
+  it('affiche PostgreSQL par défaut', () => {
+    loadProject(createHotelExampleProject());
+    renderPanel();
+    expect(screen.getByTestId('sql-dialect-select')).toHaveTextContent('PostgreSQL');
+  });
+
+  it('régénère le SQL et affiche la note dédiée quand on sélectionne MySQL', async () => {
+    loadProject(createHotelExampleProject());
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(screen.getByTestId('sql-dialect-select'));
+    await user.click(await screen.findByText('MySQL / MariaDB'));
+
+    expect(screen.getByTestId('sql-code')).toHaveTextContent('CREATE TABLE `client`');
+    // MySQL utilise aussi ALTER TABLE par défaut, comme PostgreSQL.
+    expect(screen.getByTestId('sql-code')).toHaveTextContent('ALTER TABLE');
+    expect(screen.getByTestId('sql-code')).toHaveTextContent('ADD CONSTRAINT');
+    expect(screen.getByTestId('sql-dialect-note')).toHaveTextContent('accents graves');
+  });
+
+  it("SQLite n'utilise jamais ALTER TABLE et commence par PRAGMA foreign_keys", async () => {
+    loadProject(createHotelExampleProject());
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(screen.getByTestId('sql-dialect-select'));
+    await user.click(await screen.findByText('SQLite'));
+
+    const code = screen.getByTestId('sql-code');
+    expect(code).toHaveTextContent('PRAGMA foreign_keys = ON');
+    expect(code).not.toHaveTextContent('ALTER TABLE');
+    expect(screen.getByTestId('sql-dialect-note')).toHaveTextContent('affinités de types');
+  });
+
+  it('persiste le dialecte sélectionné dans les paramètres du projet', async () => {
+    loadProject(createHotelExampleProject());
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(screen.getByTestId('sql-dialect-select'));
+    await user.click(await screen.findByText('SQLite'));
+
+    expect(useProjectStore.getState().settings.sqlDialect).toBe('sqlite');
+  });
+
+  it('le fichier téléchargé utilise le suffixe du dialecte sélectionné', async () => {
+    loadProject(createHotelExampleProject());
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(screen.getByTestId('sql-dialect-select'));
+    await user.click(await screen.findByText('MySQL / MariaDB'));
+
+    let downloadedName: string | undefined;
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      downloadedName = this.download;
+    });
+    await user.click(screen.getByTestId('sql-download-button'));
+    expect(downloadedName).toBe('gestion-d-hotel.mysql.sql');
+  });
+});
