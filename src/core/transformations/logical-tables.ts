@@ -54,6 +54,7 @@ export function buildEntityTable(
     nullable: !attribute.required,
     sourceId: attribute.id,
     origin: 'entity-attribute',
+    description: attribute.description,
   }));
   const columnIdByAttributeId = new Map(
     entity.attributes.map((attribute, index) => [attribute.id, columns[index]?.id]),
@@ -110,6 +111,7 @@ export function buildEntityTable(
     id: tableId,
     name: tableName,
     sourceIds: [entity.id],
+    description: entity.description,
     columns,
     primaryKey,
     foreignKeys: [],

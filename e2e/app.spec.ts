@@ -116,3 +116,60 @@ test('génère le MLD à partir du MCD et le met à jour après modification', a
   await expect(page.getByTestId('logical-table-clientele')).toBeVisible();
   await expect(page.getByTestId('logical-table-reservation')).toContainText('clientele_id_client');
 });
+
+test('génère le SQL PostgreSQL à partir du MLD', async ({ page }) => {
+  await page.getByRole('tab', { name: 'SQL' }).click();
+  await expect(page.getByTestId('sql-preview-panel')).toBeVisible();
+  const code = page.getByTestId('sql-code');
+  await expect(code).toContainText('CREATE TABLE "client"');
+  await expect(code).toContainText('CREATE TABLE "reservation"');
+  await expect(code).toContainText('FOREIGN KEY');
+  await expect(code).toContainText('REFERENCES "client"');
+});
+
+test('copie le SQL dans le presse-papiers', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.getByRole('tab', { name: 'SQL' }).click();
+  await expect(page.getByTestId('sql-preview-panel')).toBeVisible();
+
+  await page.getByTestId('sql-copy-button').click();
+  await expect(page.getByText('SQL copié')).toBeVisible();
+
+  const clipboardText = await page.evaluate(() => {
+    const nav = navigator as unknown as { clipboard: { readText: () => Promise<string> } };
+    return nav.clipboard.readText();
+  });
+  expect(clipboardText).toContain('CREATE TABLE "client"');
+});
+
+test('télécharge le fichier SQL', async ({ page }) => {
+  await page.getByRole('tab', { name: 'SQL' }).click();
+  await expect(page.getByTestId('sql-preview-panel')).toBeVisible();
+
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByTestId('sql-download-button').click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe('gestion-d-hotel.postgresql.sql');
+
+  const filePath = await download.path();
+  const fs = await import('node:fs/promises');
+  const content = await fs.readFile(filePath, 'utf-8');
+  expect(content).toContain('CREATE TABLE "client"');
+});
+
+test('le SQL se met à jour après une modification du MCD', async ({ page }) => {
+  await page.getByTestId('entity-node-CLIENT').click();
+  await page.getByTestId('entity-name-input').fill('CLIENTELE');
+
+  await page.getByRole('tab', { name: 'SQL' }).click();
+  await expect(page.getByTestId('sql-code')).toContainText('CREATE TABLE "clientele"');
+});
+
+test('bloque la génération SQL en présence d’erreurs bloquantes', async ({ page }) => {
+  await page.getByTestId('entity-node-CLIENT').click();
+  await page.getByTestId('entity-name-input').fill('');
+
+  await page.getByRole('tab', { name: 'SQL' }).click();
+  await expect(page.getByTestId('sql-preview-blocked')).toBeVisible();
+  await expect(page.getByTestId('sql-code')).not.toBeVisible();
+});

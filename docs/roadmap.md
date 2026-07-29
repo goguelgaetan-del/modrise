@@ -22,13 +22,23 @@
       recalculé automatiquement à chaque modification du MCD
 - [x] Tests exhaustifs par type d'association (1,N / N,N / 1,1 / réflexive / n-aire)
 
-## v0.3 — SQL
+## v0.3.1 — SQL PostgreSQL (terminé)
 
-- [ ] Générateur PostgreSQL
+- [x] Générateur PostgreSQL (règles documentées dans
+      [postgresql-generation.md](postgresql-generation.md)) : types,
+      clés primaires simples/composées, contraintes uniques, clés étrangères
+      (`ALTER TABLE` par défaut, `inline` disponible), réflexif, cycles,
+      validation défensive, nommage déterministe de contraintes
+- [x] Aperçu SQL avec copie et téléchargement `.sql`, options fonctionnelles
+      (en-tête, `DROP TABLE`, casse des mots-clés)
+- [x] Tests unitaires exhaustifs + snapshots par fixture
+
+## v0.3.2 — SQL MySQL / SQLite
+
 - [ ] Générateur MySQL / MariaDB
 - [ ] Générateur SQLite
-- [ ] Aperçu SQL avec coloration, copie et téléchargement `.sql`
-- [ ] Tests snapshot des sorties SQL
+- [ ] Sélecteur de dialecte fonctionnel dans l'interface
+- [ ] Coloration syntaxique du SQL (si légère)
 
 ## v0.4 — Expérience utilisateur
 

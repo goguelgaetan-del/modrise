@@ -343,6 +343,7 @@ export function buildJunctionTable(
     id: tableId,
     name: tableName,
     sourceIds: [association.id],
+    description: association.description,
     columns,
     primaryKey,
     foreignKeys,
@@ -381,6 +382,7 @@ function migrateAssociationAttributes(
       nullable: !attribute.required,
       sourceId: attribute.id,
       origin: 'association-attribute',
+      description: attribute.description,
     });
   }
 }

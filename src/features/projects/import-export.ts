@@ -8,16 +8,11 @@ import {
   PROJECT_FILE_EXTENSION,
   serializeProject,
 } from '@/core/serialization/file-format';
+import { slugify } from '@/lib/slugify';
 
 /** Nom de fichier proposé à l'export : nom du projet en minuscules + extension. */
 export function exportFileName(projectName: string): string {
-  const slug = projectName
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-  return `${slug || 'projet'}${PROJECT_FILE_EXTENSION}`;
+  return `${slugify(projectName, 'projet')}${PROJECT_FILE_EXTENSION}`;
 }
 
 export function downloadProjectFile(project: ModriseProject): void {

@@ -1,12 +1,11 @@
 /**
  * Panneau inférieur : onglets Validation / MLD / SQL.
- * Les onglets MLD et SQL affichent honnêtement leur indisponibilité tant que
- * les moteurs correspondants (v0.2 / v0.3) ne sont pas implémentés.
  */
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useUiStore } from '@/stores/ui-store';
 import type { BottomTab } from '@/stores/ui-store';
 import { LogicalModelPanel } from '@/features/logical-model/components/LogicalModelPanel';
+import { SqlPreviewPanel } from '@/features/sql-preview/components/SqlPreviewPanel';
 import { ValidationPanel } from '@/features/validation/components/ValidationPanel';
 import { useValidation } from '@/features/validation/use-validation';
 import { Badge } from '@/components/ui/badge';
@@ -60,19 +59,9 @@ export function BottomPanel() {
         <div className="min-h-0 flex-1">
           {bottomTab === 'validation' && <ValidationPanel />}
           {bottomTab === 'mld' && <LogicalModelPanel />}
-          {bottomTab === 'sql' && (
-            <PlannedFeature label="La génération SQL (PostgreSQL, MySQL, SQLite) est prévue pour la version 0.3." />
-          )}
+          {bottomTab === 'sql' && <SqlPreviewPanel />}
         </div>
       )}
     </section>
-  );
-}
-
-function PlannedFeature({ label }: { label: string }) {
-  return (
-    <div className="flex h-full items-center justify-center px-4 text-sm text-muted-foreground">
-      Fonctionnalité prévue dans une prochaine version — {label}
-    </div>
   );
 }
