@@ -8,7 +8,7 @@ Modrise sépare strictement sept responsabilités :
 2. **le modèle graphique** (`src/core/diagram`) ;
 3. **le moteur de validation** (`src/core/validation`) ;
 4. **le moteur de transformation MCD → MLD** (`src/core/transformations`, v0.2) ;
-5. **les générateurs SQL** (`src/core/sql`, v0.3) ;
+5. **les générateurs SQL** (`src/core/sql`, PostgreSQL en v0.3.1) ;
 6. **la persistance locale** (`src/persistence`) ;
 7. **l'interface React** (`src/app`, `src/components`, `src/features`, `src/stores`).
 
@@ -29,8 +29,12 @@ src/
 │   ├── transformations/    # transformToLogicalModel : entités, 1,N, 1,1,
 │   │                       # N,N/n-aire, nommage déterministe (voir
 │   │                       # docs/logical-transformation.md)
-│   ├── sql/                # interface SqlDialect (impl. v0.3), nommage SQL,
-│   │                       # mots réservés
+│   ├── sql/                # interface SqlDialect, registre des dialectes,
+│   │   ├── postgresql/     # dialecte PostgreSQL (v0.3.1) : échappement,
+│   │   │                   # mapping de types, nommage de contraintes,
+│   │   │                   # validation défensive, générateur
+│   │   ├── naming.ts       # nommage conceptuel → identifiants physiques
+│   │   └── reserved-words.ts
 │   ├── serialization/      # format .merise.json : serialize / parse (Zod)
 │   ├── migrations/         # ProjectMigration + applyMigrations
 │   ├── examples/           # projet d'exemple « Gestion d'hôtel »
@@ -52,6 +56,7 @@ src/
 │   ├── associations/       # inspecteur d'association
 │   ├── validation/         # panneau de validation, ancrage des problèmes
 │   ├── logical-model/      # useLogicalModel (hook dérivé mémoïsé), panneau MLD
+│   ├── sql-preview/        # useSqlGeneration, panneau SQL (aperçu, copier, télécharger)
 │   └── projects/           # import / export de fichiers
 ├── components/
 │   ├── layout/             # TopBar, SidebarLeft, InspectorPanel, BottomPanel
@@ -92,6 +97,12 @@ src/
   moteur de validation existant et refuse de produire un MLD tant que le MCD
   contient des erreurs bloquantes ; le panneau MLD redirige alors vers
   l'onglet de validation plutôt que de dupliquer les règles.
+- Le **SQL** suit le même principe de vue dérivée : `useSqlGeneration`
+  mémoïse `SqlDialect.generate(logicalModel, options)` (pipeline complet
+  `ConceptualModel → Validation → LogicalModel → SqlDialect → SQL`) et n'est
+  jamais persisté. Le générateur PostgreSQL revalide défensivement la
+  structure du modèle logique avant de produire quoi que ce soit et ne lève
+  jamais d'exception (voir docs/postgresql-generation.md).
 
 ## Décisions structurantes
 
@@ -107,9 +118,9 @@ src/
   participations, jamais silencieusement.
 - **Import sans confiance** : fichiers importés et documents IndexedDB suivent
   le même pipeline parse → migration → validation Zod.
-- **Fonctionnalités à venir affichées honnêtement** : SQL, undo/redo et
-  commentaires sont présentés comme « Fonctionnalité prévue dans une prochaine
-  version », jamais simulés.
+- **Fonctionnalités à venir affichées honnêtement** : MySQL/SQLite, undo/redo
+  et commentaires de canevas sont présentés comme « Fonctionnalité prévue
+  dans une prochaine version », jamais simulés.
 - **Nommage déterministe et sans aléatoire** : la transformation MCD → MLD ne
   génère aucun id ni nom aléatoire ; `LogicalNameRegistry` résout les
   collisions par suffixe numérique stable et signale chaque résolution par un

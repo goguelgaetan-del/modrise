@@ -13,7 +13,7 @@ Modrise permet de concevoir des modèles conceptuels de données (MCD), de gén�
 - Un **format de fichier ouvert et versionné** (`.merise.json`) avec migrations.
 - Un vrai produit logiciel : typé strictement, testé, documenté, évolutif.
 
-## Fonctionnalités disponibles (v0.1 + v0.2)
+## Fonctionnalités disponibles (v0.1 → v0.3.1)
 
 - Création graphique d'entités et d'associations (React Flow).
 - Attributs typés (integer, bigint, decimal, varchar, text, boolean, date, datetime, uuid) avec obligatoire / unique.
@@ -22,6 +22,7 @@ Modrise permet de concevoir des modèles conceptuels de données (MCD), de gén�
 - Associations binaires, n-aires et réflexives ; attributs portés par une association.
 - Validation en continu (erreurs et avertissements Merise/SQL) avec sélection et recentrage de l'élément concerné.
 - **Transformation MCD → MLD** (onglet « MLD ») : entités → tables, identifiants simples/composés/alternatifs → clés primaires/contraintes uniques, associations 1,N / N,N / 1,1 / réflexives / n-aires → clés étrangères ou tables associatives, nommage déterministe avec résolution de collisions. Recalculée automatiquement à chaque modification du MCD ; bloquée tant que le MCD contient des erreurs. Voir [docs/logical-transformation.md](docs/logical-transformation.md).
+- **Génération SQL PostgreSQL** (onglet « SQL ») : `CREATE TABLE`, clés primaires/uniques/étrangères simples ou composées, ordre déterministe, aperçu avec copie et téléchargement `.sql`. Recalculée automatiquement à chaque modification du MCD ou du MLD. Voir [docs/postgresql-generation.md](docs/postgresql-generation.md).
 - Suppression protégée : une entité référencée n'est jamais supprimée silencieusement.
 - Sauvegarde automatique dans IndexedDB (statut affiché), rechargement du dernier projet.
 - Import / export `.merise.json` validé par Zod, avec messages d'erreur clairs.
@@ -29,7 +30,7 @@ Modrise permet de concevoir des modèles conceptuels de données (MCD), de gén�
 
 ## Fonctionnalités prévues
 
-- v0.3 : génération SQL (PostgreSQL, MySQL/MariaDB, SQLite) et export `.sql`, à partir du modèle logique déjà produit.
+- v0.3.2 : génération SQL MySQL/MariaDB et SQLite, sélecteur de dialecte fonctionnel.
 - v0.4 : annuler/rétablir, copier-coller, duplication, export PNG/SVG.
 - Ensuite : application desktop Tauri, rétro-ingénierie SQL, héritage Merise, MCT, collaboration… (voir [docs/roadmap.md](docs/roadmap.md)).
 
