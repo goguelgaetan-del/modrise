@@ -1,54 +1,146 @@
 /**
  * Transformation MCD → MLD.
  *
- * Pipeline cible :
+ * Pipeline obligatoire :
  *
  *   ConceptualModel → Validation → LogicalModel → SqlDialect → SQL
  *
- * TODO(v0.2) — implémenter `transformToLogicalModel` avec les règles suivantes,
- * chacune testée indépendamment :
+ * Le SQL n'est jamais généré directement depuis le MCD. La transformation
+ * est bloquée tant que la validation du modèle conceptuel contient des
+ * erreurs bloquantes (voir `LogicalTransformationResult`).
  *
- * 1. Entités : une table par entité ; attributs → colonnes ; identifiant
- *    primaire → clé primaire (composée supportée) ; identifiants alternatifs
- *    → contraintes uniques.
- * 2. Association 1,N : migration de la clé primaire du côté max=1 vers la
- *    table du côté max=N ; clé étrangère ; nullabilité issue de la
- *    cardinalité minimale du côté max=1 ; attributs portés migrés dans la
- *    table du côté N.
- * 3. Association N,N : table associative, clés étrangères vers chaque
- *    participante, attributs portés, clé primaire composée par défaut,
- *    rôles utilisés pour résoudre les collisions de noms.
- * 4. Association 1,1 : clé étrangère du côté optionnel si l'autre côté est
- *    obligatoire, contrainte unique ; sinon choix déterministe (ordre stable
- *    des participations) signalé par un avertissement.
- * 5. Association réflexive : colonnes nommées d'après les rôles
- *    (ex. `manager_id` / `subordonne_id`) ; problème de validation si les
- *    rôles sont absents ou identiques.
- * 6. Association n-aire : table associative avec toutes les clés étrangères
- *    et une clé primaire composée cohérente.
+ * Déterminisme : `transformToLogicalModel` ne génère aucun identifiant
+ * aléatoire — tous les ids du modèle logique sont dérivés par simple
+ * concaténation des ids stables du modèle conceptuel fourni en entrée. À
+ * modèle et options égaux, la sortie (ids, noms, ordre) est strictement
+ * identique d'un appel à l'autre.
  *
- * L'héritage Merise n'est pas couvert par le MVP ; l'architecture (issues,
- * sourceIds) est prévue pour l'ajouter sans casser le format.
+ * Voir docs/logical-transformation.md pour le détail des règles par type
+ * d'association et des exemples entrée/sortie.
  */
 import type { ConceptualModel } from '../conceptual-model/types';
-import type { LogicalModel } from '../logical-model/types';
+import type {
+  LogicalModel,
+  LogicalTable,
+  LogicalTransformationIssue,
+} from '../logical-model/types';
 import type { NamingConvention } from '../sql/naming';
+import { DEFAULT_NAMING_CONVENTION } from '../sql/naming';
+import type { ValidationIssue } from '../validation/types';
+import { hasBlockingErrors, validateConceptualModel } from '../validation/validate';
+import {
+  applyOneToMany,
+  applyOneToOne,
+  buildJunctionTable,
+  checkReflexiveNaming,
+  classifyAssociation,
+} from './logical-associations';
+import { LogicalNameRegistry } from './logical-naming';
+import { buildEntityTable } from './logical-tables';
 
-export interface TransformationOptions {
+export interface LogicalTransformationOptions {
   namingConvention: NamingConvention;
 }
 
-/**
- * Indique si la transformation est disponible dans cette version.
- * L'interface s'appuie dessus pour afficher un état honnête plutôt qu'un
- * faux résultat.
- */
-export const LOGICAL_TRANSFORMATION_AVAILABLE = false;
+export const DEFAULT_LOGICAL_TRANSFORMATION_OPTIONS: LogicalTransformationOptions = {
+  namingConvention: DEFAULT_NAMING_CONVENTION,
+};
 
+/**
+ * Codes des problèmes propres à la transformation (distincts des codes de
+ * validation du MCD, qui utilisent `VALIDATION_CODES`).
+ */
+export const LOGICAL_TRANSFORMATION_CODES = {
+  oneToOneAmbiguousSideSelected: 'ONE_TO_ONE_AMBIGUOUS_SIDE_SELECTED',
+  naryAssociationJunctionTableCreated: 'NARY_ASSOCIATION_JUNCTION_TABLE_CREATED',
+  reflexiveAssociationMissingRole: 'REFLEXIVE_ASSOCIATION_MISSING_ROLE',
+  sqlNameCollisionResolved: 'SQL_NAME_COLLISION_RESOLVED',
+  constraintNameTruncated: 'CONSTRAINT_NAME_TRUNCATED',
+  internalTransformationError: 'INTERNAL_TRANSFORMATION_ERROR',
+} as const;
+
+export type LogicalTransformationResult =
+  { success: true; model: LogicalModel } | { success: false; issues: LogicalTransformationIssue[] };
+
+function toBlockingIssue(issue: ValidationIssue): LogicalTransformationIssue {
+  return {
+    id: `blocked:${issue.id}`,
+    severity: issue.severity,
+    code: issue.code,
+    message: issue.message,
+    sourceIds: issue.targetId ? [issue.targetId] : [],
+  };
+}
+
+/**
+ * Transforme un modèle conceptuel validé en modèle logique.
+ *
+ * Ordre déterministe des tables : les tables issues des entités d'abord
+ * (dans l'ordre du MCD), puis les tables associatives (N,N / n-aires) dans
+ * l'ordre des associations du MCD — jamais de tri alphabétique.
+ */
 export function transformToLogicalModel(
-  _model: ConceptualModel,
-  _options: TransformationOptions,
-): LogicalModel {
-  // TODO(v0.2) : voir le plan détaillé dans l'en-tête du fichier.
-  throw new Error('La transformation MCD → MLD sera disponible dans une prochaine version (v0.2).');
+  model: ConceptualModel,
+  options: LogicalTransformationOptions = DEFAULT_LOGICAL_TRANSFORMATION_OPTIONS,
+): LogicalTransformationResult {
+  try {
+    const validationIssues = validateConceptualModel(model, {
+      namingConvention: options.namingConvention,
+    });
+    if (hasBlockingErrors(validationIssues)) {
+      return {
+        success: false,
+        issues: validationIssues.filter((issue) => issue.severity === 'error').map(toBlockingIssue),
+      };
+    }
+
+    const registry = new LogicalNameRegistry(options.namingConvention);
+    const issues: LogicalTransformationIssue[] = [];
+    const pushIssue = (issue: Omit<LogicalTransformationIssue, 'id'>): void => {
+      issues.push({ id: `issue-${issues.length + 1}`, ...issue });
+    };
+
+    const entityTables = new Map<string, LogicalTable>();
+    for (const entity of model.entities) {
+      entityTables.set(entity.id, buildEntityTable(entity, registry, pushIssue));
+    }
+
+    const junctionTables: LogicalTable[] = [];
+    for (const association of model.associations) {
+      checkReflexiveNaming(association, pushIssue);
+      const kind = classifyAssociation(association);
+      if (kind === 'one-to-many') {
+        applyOneToMany(association, model, entityTables, registry, pushIssue);
+      } else if (kind === 'one-to-one') {
+        applyOneToOne(association, model, entityTables, registry, pushIssue);
+      } else {
+        const table = buildJunctionTable(association, model, entityTables, registry, pushIssue);
+        if (table) junctionTables.push(table);
+      }
+    }
+
+    const tables = [
+      ...model.entities
+        .map((entity) => entityTables.get(entity.id))
+        .filter((table): table is LogicalTable => table !== undefined),
+      ...junctionTables,
+    ];
+
+    return { success: true, model: { tables, issues } };
+  } catch (error) {
+    console.error('Erreur inattendue pendant la transformation MCD → MLD :', error);
+    return {
+      success: false,
+      issues: [
+        {
+          id: 'internal-error',
+          severity: 'error',
+          code: LOGICAL_TRANSFORMATION_CODES.internalTransformationError,
+          message:
+            'Une erreur interne inattendue a empêché la génération du MLD. Consultez la console pour plus de détails.',
+          sourceIds: [],
+        },
+      ],
+    };
+  }
 }
