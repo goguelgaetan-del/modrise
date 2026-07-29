@@ -1,0 +1,317 @@
+{
+  "formatVersion": 1,
+  "project": {
+    "id": "ea72cd60-b716-40a1-bc16-bb17abea6010",
+    "name": "Gestion d'hôtel",
+    "description": "Projet d'exemple : clients, chambres et réservations.",
+    "createdAt": "2026-07-29T12:43:37.099Z",
+    "updatedAt": "2026-07-29T12:43:37.099Z"
+  },
+  "conceptualModel": {
+    "entities": [
+      {
+        "id": "f063df81-6cea-4f45-bdcf-7c3bdec17fc0",
+        "name": "CLIENT",
+        "attributes": [
+          {
+            "id": "84ce1f53-db2a-421b-87c3-d5994af0f409",
+            "name": "id_client",
+            "dataType": {
+              "kind": "integer"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "6448e63b-7ccb-450d-a765-5f2401aeb5dc",
+            "name": "nom",
+            "dataType": {
+              "kind": "varchar",
+              "length": 100
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "00467c2d-778a-43d9-9e8b-8311f29573c1",
+            "name": "prenom",
+            "dataType": {
+              "kind": "varchar",
+              "length": 100
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "0e46829e-904a-4535-9704-8607d47d7614",
+            "name": "email",
+            "dataType": {
+              "kind": "varchar",
+              "length": 255
+            },
+            "required": false,
+            "unique": true
+          },
+          {
+            "id": "3773ceb2-2843-427b-a1a3-e8ffda056c91",
+            "name": "telephone",
+            "dataType": {
+              "kind": "varchar",
+              "length": 20
+            },
+            "required": false,
+            "unique": false
+          }
+        ],
+        "identifiers": [
+          {
+            "id": "a1d53543-55e8-4be7-bd86-833b1e5f4d4b",
+            "attributeIds": ["84ce1f53-db2a-421b-87c3-d5994af0f409"],
+            "primary": true
+          }
+        ]
+      },
+      {
+        "id": "79bc5163-fdf1-4390-b846-b07013295100",
+        "name": "CHAMBRE",
+        "attributes": [
+          {
+            "id": "9eb6d042-84b3-44aa-b543-7866fbd5b1f1",
+            "name": "id_chambre",
+            "dataType": {
+              "kind": "integer"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "78246921-912a-48eb-bca6-3d9c4fdd4305",
+            "name": "numero",
+            "dataType": {
+              "kind": "varchar",
+              "length": 10
+            },
+            "required": true,
+            "unique": true
+          },
+          {
+            "id": "5441df3f-b355-41fa-ac17-c8b3ce7038b7",
+            "name": "type",
+            "dataType": {
+              "kind": "varchar",
+              "length": 50
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "27d3e61a-e9f2-4d17-80bb-100494530f43",
+            "name": "etage",
+            "dataType": {
+              "kind": "integer"
+            },
+            "required": false,
+            "unique": false
+          },
+          {
+            "id": "2b616ef5-9c7b-4d86-b2fd-d937da375c28",
+            "name": "prix_nuit",
+            "dataType": {
+              "kind": "decimal",
+              "precision": 8,
+              "scale": 2
+            },
+            "required": true,
+            "unique": false
+          }
+        ],
+        "identifiers": [
+          {
+            "id": "c8e5d1fa-fbb1-470c-a852-8852fffe4ebc",
+            "attributeIds": ["9eb6d042-84b3-44aa-b543-7866fbd5b1f1"],
+            "primary": true
+          }
+        ]
+      },
+      {
+        "id": "7c763f49-b6f4-4354-8449-5127448a37b6",
+        "name": "RESERVATION",
+        "attributes": [
+          {
+            "id": "46e65cdf-47eb-4715-8dbc-7238df7797b8",
+            "name": "id_reservation",
+            "dataType": {
+              "kind": "integer"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "a80a61cb-f549-4ac9-8a47-1997528b67ed",
+            "name": "date_arrivee",
+            "dataType": {
+              "kind": "date"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "0305bf55-1611-474e-a7fc-8f3c4525b5bf",
+            "name": "date_depart",
+            "dataType": {
+              "kind": "date"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "a1d3fcea-0422-4b03-875c-13ed6121af3c",
+            "name": "nombre_personnes",
+            "dataType": {
+              "kind": "integer"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "65b96b49-9966-44a3-b982-cf8b3eb2ecf8",
+            "name": "statut",
+            "dataType": {
+              "kind": "varchar",
+              "length": 20
+            },
+            "required": true,
+            "unique": false
+          }
+        ],
+        "identifiers": [
+          {
+            "id": "f8c52b25-42e2-4e60-b076-84ae5f012d94",
+            "attributeIds": ["46e65cdf-47eb-4715-8dbc-7238df7797b8"],
+            "primary": true
+          }
+        ]
+      }
+    ],
+    "associations": [
+      {
+        "id": "a9e49bc1-0922-42e6-b909-da840471d8d9",
+        "name": "EFFECTUER",
+        "attributes": [],
+        "participations": [
+          {
+            "id": "e590b710-17bf-4408-aa67-08e75914c920",
+            "entityId": "f063df81-6cea-4f45-bdcf-7c3bdec17fc0",
+            "cardinality": {
+              "min": 0,
+              "max": "N"
+            }
+          },
+          {
+            "id": "2f366c0c-5e3a-4689-b2c3-606fd8e495d8",
+            "entityId": "7c763f49-b6f4-4354-8449-5127448a37b6",
+            "cardinality": {
+              "min": 1,
+              "max": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "adb1470d-1a5a-49a5-b31b-47e4f090c42c",
+        "name": "CONCERNER",
+        "attributes": [
+          {
+            "id": "d44f6f79-d33f-4609-8dfc-7b092bc5ffa2",
+            "name": "prix_convenu",
+            "dataType": {
+              "kind": "decimal",
+              "precision": 8,
+              "scale": 2
+            },
+            "required": false,
+            "unique": false
+          }
+        ],
+        "participations": [
+          {
+            "id": "b95bde9f-e1a5-46cf-9767-ad675994f8ba",
+            "entityId": "7c763f49-b6f4-4354-8449-5127448a37b6",
+            "cardinality": {
+              "min": 1,
+              "max": "N"
+            }
+          },
+          {
+            "id": "d621e9e9-6b93-48db-8156-0307ae6afd41",
+            "entityId": "79bc5163-fdf1-4390-b846-b07013295100",
+            "cardinality": {
+              "min": 0,
+              "max": "N"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "diagram": {
+    "nodes": [
+      {
+        "id": "a1992047-e30d-4486-9892-478f9f0c2570",
+        "modelId": "f063df81-6cea-4f45-bdcf-7c3bdec17fc0",
+        "nodeType": "entity",
+        "position": {
+          "x": 80,
+          "y": 80
+        }
+      },
+      {
+        "id": "466e2b3c-d4b5-49be-8d3d-0bfb711f9cb8",
+        "modelId": "79bc5163-fdf1-4390-b846-b07013295100",
+        "nodeType": "entity",
+        "position": {
+          "x": 80,
+          "y": 420
+        }
+      },
+      {
+        "id": "0c329322-fda2-4e1e-88d6-5673cb67b7d4",
+        "modelId": "7c763f49-b6f4-4354-8449-5127448a37b6",
+        "nodeType": "entity",
+        "position": {
+          "x": 620,
+          "y": 240
+        }
+      },
+      {
+        "id": "789a6696-4da0-4071-8cec-255353e88eac",
+        "modelId": "a9e49bc1-0922-42e6-b909-da840471d8d9",
+        "nodeType": "association",
+        "position": {
+          "x": 380,
+          "y": 130
+        }
+      },
+      {
+        "id": "6c1e63b4-0dd0-4e3c-8e8e-884351a0c705",
+        "modelId": "adb1470d-1a5a-49a5-b31b-47e4f090c42c",
+        "nodeType": "association",
+        "position": {
+          "x": 380,
+          "y": 380
+        }
+      }
+    ],
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    }
+  },
+  "settings": {
+    "sqlDialect": "postgresql",
+    "namingConvention": "snake_case",
+    "gridEnabled": true,
+    "snapToGrid": true
+  }
+}
