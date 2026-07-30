@@ -7,7 +7,7 @@
 import type { Edge, Node } from '@xyflow/react';
 import type { Association, ConceptualModel, Entity } from '@/core/conceptual-model/types';
 import { formatCardinality } from '@/core/conceptual-model/types';
-import type { DiagramNode } from '@/core/diagram/types';
+import type { DiagramComment, DiagramNode } from '@/core/diagram/types';
 
 export interface EntityNodeData extends Record<string, unknown> {
   entity: Entity;
@@ -19,13 +19,20 @@ export interface AssociationNodeData extends Record<string, unknown> {
   hasErrors: boolean;
 }
 
+export interface CommentNodeData extends Record<string, unknown> {
+  comment: DiagramComment;
+}
+
 export interface ParticipationEdgeData extends Record<string, unknown> {
   cardinalityLabel: string;
   role?: string;
   hasErrors: boolean;
 }
 
-export type ModriseNode = Node<EntityNodeData, 'entity'> | Node<AssociationNodeData, 'association'>;
+export type ModriseNode =
+  | Node<EntityNodeData, 'entity'>
+  | Node<AssociationNodeData, 'association'>
+  | Node<CommentNodeData, 'comment'>;
 export type ModriseEdge = Edge<ParticipationEdgeData, 'participation'>;
 
 /** Côtés de connexion : chaque nœud expose une paire de handles par côté. */
@@ -53,10 +60,12 @@ function closestSides(from: DiagramNode, to: DiagramNode): { from: HandleSide; t
 export function toReactFlowNodes(
   diagramNodes: DiagramNode[],
   model: ConceptualModel,
+  comments: DiagramComment[],
   selectedNodeIds: string[],
   modelIdsWithErrors: ReadonlySet<string>,
 ): ModriseNode[] {
   const selected = new Set(selectedNodeIds);
+  const commentById = new Map(comments.map((comment) => [comment.id, comment]));
   const nodes: ModriseNode[] = [];
   for (const diagramNode of diagramNodes) {
     if (diagramNode.nodeType === 'entity') {
@@ -79,8 +88,19 @@ export function toReactFlowNodes(
         selected: selected.has(diagramNode.id),
         data: { association, hasErrors: modelIdsWithErrors.has(association.id) },
       });
+    } else if (diagramNode.nodeType === 'comment') {
+      const comment = commentById.get(diagramNode.modelId);
+      if (!comment) continue;
+      nodes.push({
+        id: diagramNode.id,
+        type: 'comment',
+        position: diagramNode.position,
+        width: diagramNode.width,
+        height: diagramNode.height,
+        selected: selected.has(diagramNode.id),
+        data: { comment },
+      });
     }
-    // TODO(v0.4) : nœuds de commentaire.
   }
   return nodes;
 }

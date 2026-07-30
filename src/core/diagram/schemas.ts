@@ -16,7 +16,13 @@ export const diagramViewportSchema = z.object({
   zoom: z.number().positive(),
 });
 
+export const diagramCommentSchema = z.object({
+  id: z.string().min(1),
+  text: z.string(),
+});
+
 export const diagramModelSchema: z.ZodType<DiagramModel> = z.object({
   nodes: z.array(diagramNodeSchema),
   viewport: diagramViewportSchema,
+  comments: z.array(diagramCommentSchema),
 });

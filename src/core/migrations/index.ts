@@ -14,8 +14,32 @@ export interface ProjectMigration {
   migrate(data: unknown): unknown;
 }
 
-/** Registre ordonné des migrations. Vide tant que le format n'a qu'une version. */
-export const MIGRATIONS: readonly ProjectMigration[] = [];
+interface LegacyDiagram {
+  diagram?: { comments?: unknown };
+}
+
+/**
+ * v1 → v2 : introduction des commentaires graphiques (`diagram.comments`).
+ * Un fichier v1 n'a jamais ce champ : on lui ajoute une liste vide, qui
+ * n'affecte ni le modèle conceptuel ni les positions existantes.
+ */
+const addDiagramComments: ProjectMigration = {
+  fromVersion: 1,
+  toVersion: 2,
+  migrate: (data) => {
+    const project = data as LegacyDiagram;
+    if (!project.diagram || Array.isArray(project.diagram.comments)) {
+      return data;
+    }
+    return {
+      ...(data as object),
+      diagram: { ...project.diagram, comments: [] },
+    };
+  },
+};
+
+/** Registre ordonné des migrations. */
+export const MIGRATIONS: readonly ProjectMigration[] = [addDiagramComments];
 
 export class MigrationError extends Error {}
 
