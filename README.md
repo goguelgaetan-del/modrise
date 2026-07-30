@@ -13,7 +13,7 @@ Modrise permet de concevoir des modèles conceptuels de données (MCD), de gén�
 - Un **format de fichier ouvert et versionné** (`.merise.json`) avec migrations.
 - Un vrai produit logiciel : typé strictement, testé, documenté, évolutif.
 
-## Fonctionnalités disponibles (v0.1 → v0.3.2)
+## Fonctionnalités disponibles (v0.1 → v0.4)
 
 - Création graphique d'entités et d'associations (React Flow).
 - Attributs typés (integer, bigint, decimal, varchar, text, boolean, date, datetime, uuid) avec obligatoire / unique.
@@ -23,15 +23,22 @@ Modrise permet de concevoir des modèles conceptuels de données (MCD), de gén�
 - Validation en continu (erreurs et avertissements Merise/SQL) avec sélection et recentrage de l'élément concerné.
 - **Transformation MCD → MLD** (onglet « MLD ») : entités → tables, identifiants simples/composés/alternatifs → clés primaires/contraintes uniques, associations 1,N / N,N / 1,1 / réflexives / n-aires → clés étrangères ou tables associatives, nommage déterministe avec résolution de collisions. Recalculée automatiquement à chaque modification du MCD ; bloquée tant que le MCD contient des erreurs. Voir [docs/logical-transformation.md](docs/logical-transformation.md).
 - **Génération SQL multi-dialecte** (onglet « SQL »), avec sélecteur fonctionnel : **PostgreSQL**, **MySQL/MariaDB** et **SQLite**. `CREATE TABLE`, clés primaires/uniques/étrangères simples ou composées, ordre déterministe, aperçu avec copie et téléchargement `.sql` (nom adapté au dialecte). Recalculée automatiquement à chaque modification du MCD, du MLD ou du dialecte choisi ; le dialecte sélectionné est persisté dans le projet et conservé à l'import/export. Voir [docs/postgresql-generation.md](docs/postgresql-generation.md), [docs/mysql-generation.md](docs/mysql-generation.md) et [docs/sqlite-generation.md](docs/sqlite-generation.md).
-- Suppression protégée : une entité référencée n'est jamais supprimée silencieusement.
+- Suppression protégée : une entité référencée n'est jamais supprimée silencieusement (suppression simple ou groupée).
 - Sauvegarde automatique dans IndexedDB (statut affiché), rechargement du dernier projet.
 - Import / export `.merise.json` validé par Zod, avec messages d'erreur clairs.
-- Projet d'exemple « Gestion d'hôtel », thème clair / sombre, raccourcis de base (Ctrl+S, Suppr, Échap, F).
+- Projet d'exemple « Gestion d'hôtel », thème clair / sombre.
+- **Annuler / rétablir** (une entrée par geste, jamais par pixel ou par frappe) avec libellé de l'action affiché sur les boutons de la barre supérieure. Voir [docs/editor-history.md](docs/editor-history.md).
+- **Presse-papiers interne** : copier / coller / dupliquer une sélection (entités, associations, commentaires), avec remappage complet des identifiants et décalage croissant à chaque collage. Voir [docs/clipboard.md](docs/clipboard.md).
+- **Sélection multiple** (rectangle ou Shift-clic) avec déplacement, suppression, duplication et copie groupés.
+- **Commentaires graphiques** : notes purement visuelles sur le canevas, jamais dans le modèle conceptuel.
+- **Menu contextuel** (clic droit) sur le canevas vide, une entité, une association ou un commentaire.
+- **Export SVG et PNG** du diagramme entier — le SVG reste réellement vectoriel (généré depuis le modèle, pas une capture d'écran) ; le PNG en est une rastérisation haute résolution. Voir [docs/diagram-export.md](docs/diagram-export.md).
+- **Raccourcis clavier complets** : Ctrl/Cmd+Z / Maj+Z / Y (annuler/rétablir), Ctrl/Cmd+C/V/D/A (presse-papiers, tout sélectionner), Ctrl/Cmd+S/O/N (sauvegarder, importer, nouveau projet), Suppr/Retour, Échap, F (centrer) — tous ignorés dans un champ de saisie.
+- **Garde-fou de fermeture d'onglet** : avertissement uniquement s'il existe de vraies modifications non enregistrées.
 
 ## Fonctionnalités prévues
 
-- v0.4 : annuler/rétablir, copier-coller, duplication, export PNG/SVG — expérience d'édition.
-- Ensuite : application desktop Tauri, rétro-ingénierie SQL, héritage Merise, MCT, collaboration… (voir [docs/roadmap.md](docs/roadmap.md)).
+- Application desktop Tauri, rétro-ingénierie SQL, héritage Merise, MCT, collaboration, panneaux redimensionnables… (voir [docs/roadmap.md](docs/roadmap.md)).
 
 L'interface annonce explicitement les fonctionnalités non disponibles (« Fonctionnalité prévue dans une prochaine version ») : rien n'est simulé.
 
@@ -69,7 +76,7 @@ src/
 │                  # modèle logique, transformations, SQL, sérialisation,
 │                  # migrations. Aucune dépendance à React / React Flow / Zustand.
 ├── stores/        # État applicatif (Zustand + Immer) : projet, diagramme,
-│                  # historique, interface.
+│                  # historique (annuler/rétablir), presse-papiers, interface.
 ├── persistence/   # IndexedDB via Dexie : base, repository, autosauvegarde.
 ├── features/      # Fonctionnalités UI : diagramme (nœuds, arêtes, adaptateurs
 │                  # React Flow), entités, associations, validation, projets.
@@ -81,7 +88,7 @@ Principe central : **le modèle métier est la source de vérité**. React Flow 
 
 ## Format de fichier
 
-Les projets s'exportent en `.merise.json`, format JSON versionné (`formatVersion`) avec pipeline d'import : lecture sans confiance → migration → validation Zod → chargement. Voir [docs/file-format.md](docs/file-format.md). Un exemple complet est fourni dans [examples/gestion-hotel.merise.json](examples/gestion-hotel.merise.json).
+Les projets s'exportent en `.merise.json`, format JSON versionné (`formatVersion`, actuellement 2) avec pipeline d'import : lecture sans confiance → migration → validation Zod → chargement. Un fichier v1 (avant les commentaires graphiques du v0.4) s'importe et se migre normalement. Voir [docs/file-format.md](docs/file-format.md). Un exemple complet est fourni dans [examples/gestion-hotel.merise.json](examples/gestion-hotel.merise.json).
 
 ## Contribution
 

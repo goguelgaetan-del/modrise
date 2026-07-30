@@ -22,7 +22,9 @@ src/
 │   ├── conceptual-model/   # Entity, Attribute, Identifier, Association,
 │   │                       # Participation, Cardinality + schémas Zod,
 │   │                       # fabriques et opérations pures
-│   ├── diagram/            # DiagramModel : nœuds (positions), viewport
+│   ├── diagram/            # DiagramModel : nœuds (positions), viewport,
+│   │                       # commentaires (v0.4) ; geometry.ts (centre/bord
+│   │                       # d'un nœud) et bounds.ts (rectangle englobant)
 │   ├── project/            # ModriseProject, ProjectSettings, fabrique
 │   ├── validation/         # validateConceptualModel + codes de règles
 │   ├── logical-model/      # LogicalModel (tables, colonnes, FK, contraintes)
@@ -44,28 +46,41 @@ src/
 │   │   └── reserved-words.ts
 │   ├── serialization/      # format .merise.json : serialize / parse (Zod)
 │   ├── migrations/         # ProjectMigration + applyMigrations
+│   ├── export/             # to-svg.ts : rendu SVG vectoriel pur du
+│   │                       # diagramme (v0.4, voir docs/diagram-export.md)
 │   ├── examples/           # projet d'exemple « Gestion d'hôtel »
 │   └── id.ts               # génération d'identifiants
 ├── stores/                 # Zustand + Immer
 │   ├── project-store.ts    # identité du projet, modèle conceptuel, paramètres
-│   ├── diagram-store.ts    # positions, viewport, sélection (non persistée)
-│   ├── history-store.ts    # annuler/rétablir (TODO v0.4)
+│   ├── diagram-store.ts    # positions, viewport, commentaires, sélection
+│   │                       # (sélection non persistée)
+│   ├── history-store.ts    # annuler/rétablir (v0.4, voir
+│   │                       # docs/editor-history.md)
+│   ├── clipboard-store.ts  # presse-papiers interne (v0.4, voir
+│   │                       # docs/clipboard.md)
 │   ├── ui-store.ts         # thème, panneaux, statut de sauvegarde, notifications
 │   └── project-assembly.ts # assemblage stores ⇄ ModriseProject
 ├── persistence/
 │   ├── database.ts         # Dexie : tables projects + settings
 │   ├── project-repository.ts # CRUD ; relecture validée par Zod
-│   └── autosave.ts         # sauvegarde debouncée + statut
+│   ├── autosave.ts         # sauvegarde debouncée + statut
+│   └── unsaved-changes-guard.ts # garde-fou beforeunload (v0.4)
 ├── features/
 │   ├── diagram/            # canvas React Flow, EntityNode, AssociationNode,
-│   │                       # ParticipationEdge, adaptateurs, suppression protégée
+│   │                       # CommentNode, ParticipationEdge, adaptateurs,
+│   │                       # menu contextuel, raccourcis clavier, suppression
+│   │                       # protégée (simple ou groupée), export/
+│   ├── history/            # withHistory, useFieldHistory (v0.4, voir
+│   │                       # docs/editor-history.md)
+│   ├── clipboard/          # logique pure de copier/coller/dupliquer (v0.4,
+│   │                       # voir docs/clipboard.md)
 │   ├── entities/           # inspecteur d'entité
 │   ├── associations/       # inspecteur d'association
 │   ├── validation/         # panneau de validation, ancrage des problèmes
 │   ├── logical-model/      # useLogicalModel (hook dérivé mémoïsé), panneau MLD
 │   ├── sql-preview/        # useSqlGeneration, panneau SQL (sélecteur de
 │   │                       # dialecte, aperçu, copier, télécharger)
-│   └── projects/           # import / export de fichiers
+│   └── projects/           # import / export de fichiers, nouveau projet
 ├── components/
 │   ├── layout/             # TopBar, SidebarLeft, InspectorPanel, BottomPanel
 │   ├── common/             # éditeurs partagés, notifications
@@ -130,9 +145,22 @@ SqlDialect sélectionné → SQL`) et n'est jamais persisté. Chaque dialecte
   participations, jamais silencieusement.
 - **Import sans confiance** : fichiers importés et documents IndexedDB suivent
   le même pipeline parse → migration → validation Zod.
-- **Fonctionnalités à venir affichées honnêtement** : MySQL/SQLite, undo/redo
-  et commentaires de canevas sont présentés comme « Fonctionnalité prévue
-  dans une prochaine version », jamais simulés.
+- **Fonctionnalités à venir affichées honnêtement** : toute fonctionnalité
+  non implémentée est présentée comme « Fonctionnalité prévue dans une
+  prochaine version » (seul le bouton Paramètres l'est encore en v0.4),
+  jamais simulée.
+- **Historique par instantanés, pas par commandes inverses** : l'annuler/
+  rétablir (v0.4) compare des instantanés structurés du modèle et du
+  diagramme plutôt que d'enregistrer une commande et son inverse par action
+  — voir [editor-history.md](editor-history.md).
+- **Presse-papiers interne, jamais système** : copier/coller/dupliquer (v0.4)
+  passent par un presse-papiers propre à Modrise avec remappage complet des
+  identifiants, sans jamais toucher au presse-papiers du système
+  d'exploitation — voir [clipboard.md](clipboard.md).
+- **Export vectoriel, pas une capture d'écran** : l'export SVG (v0.4) est un
+  document généré depuis le modèle par une fonction pure du noyau, et
+  l'export PNG rastérise ce même document — jamais une capture du DOM React
+  Flow — voir [diagram-export.md](diagram-export.md).
 - **Nommage déterministe et sans aléatoire** : la transformation MCD → MLD ne
   génère aucun id ni nom aléatoire ; `LogicalNameRegistry` résout les
   collisions par suffixe numérique stable et signale chaque résolution par un
