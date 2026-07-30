@@ -8,6 +8,7 @@ import { FolderOpen, Sparkles, Square, Upload } from 'lucide-react';
 import { createHotelExampleProject } from '@/core/examples/hotel';
 import { saveNow, withAutosaveSuspended } from '@/persistence/autosave';
 import { loadProjectIntoStores } from '@/stores/project-assembly';
+import { useHistoryStore } from '@/stores/history-store';
 import { createEntityAt } from '@/features/diagram/actions';
 import { Button } from '@/components/ui/button';
 
@@ -23,6 +24,7 @@ export function EmptyCanvasState() {
     await withAutosaveSuspended(() => {
       loadProjectIntoStores(createHotelExampleProject());
     });
+    useHistoryStore.getState().clear();
     await saveNow();
     requestAnimationFrame(() => void fitView({ padding: 0.2 }));
   };
