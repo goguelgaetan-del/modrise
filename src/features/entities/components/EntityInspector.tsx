@@ -8,6 +8,7 @@ import { useId } from 'react';
 import { Trash2 } from 'lucide-react';
 import type { Entity } from '@/core/conceptual-model/types';
 import { useProjectStore } from '@/stores/project-store';
+import { useFieldHistory } from '@/features/history/use-field-history';
 import { AttributeListEditor } from '@/components/common/AttributeListEditor';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +25,8 @@ export function EntityInspector({ entity, onRequestDelete }: EntityInspectorProp
   const updateEntity = useProjectStore((state) => state.updateEntity);
   const nameId = useId();
   const descriptionId = useId();
+  const nameHistory = useFieldHistory("Modifier le nom de l'entité");
+  const descriptionHistory = useFieldHistory("Modifier la description de l'entité");
 
   return (
     <div className="space-y-4">
@@ -40,6 +43,8 @@ export function EntityInspector({ entity, onRequestDelete }: EntityInspectorProp
           id={nameId}
           value={entity.name}
           onChange={(event) => updateEntity(entity.id, { name: event.target.value })}
+          onFocus={nameHistory.onFocus}
+          onBlur={nameHistory.onBlur}
           data-testid="entity-name-input"
         />
       </div>
@@ -51,6 +56,8 @@ export function EntityInspector({ entity, onRequestDelete }: EntityInspectorProp
           value={entity.description ?? ''}
           rows={2}
           onChange={(event) => updateEntity(entity.id, { description: event.target.value })}
+          onFocus={descriptionHistory.onFocus}
+          onBlur={descriptionHistory.onBlur}
         />
       </div>
 

@@ -10,6 +10,7 @@ import {
   FilePlus2,
   Focus,
   FolderOpen,
+  Image,
   Moon,
   Redo2,
   Save,
@@ -17,11 +18,13 @@ import {
   Sun,
   Undo2,
 } from 'lucide-react';
-import { createProject } from '@/core/project/types';
-import { createHotelExampleProject } from '@/core/examples/hotel';
 import { FileFormatError } from '@/core/serialization/file-format';
 import { saveNow, withAutosaveSuspended } from '@/persistence/autosave';
 import { downloadProjectFile, readProjectFile } from '@/features/projects/import-export';
+import { loadNewProject as loadNewProjectShared } from '@/features/projects/new-project';
+import { downloadDiagramSvg } from '@/features/diagram/export/export-svg';
+import { downloadDiagramPng } from '@/features/diagram/export/export-png';
+import { undo, redo } from '@/features/history/with-history';
 import { assembleCurrentProject, loadProjectIntoStores } from '@/stores/project-assembly';
 import { useDiagramStore } from '@/stores/diagram-store';
 import { useHistoryStore } from '@/stores/history-store';
@@ -57,16 +60,23 @@ export function TopBar() {
   const notify = useUiStore((state) => state.notify);
   const canUndo = useHistoryStore((state) => state.canUndo);
   const canRedo = useHistoryStore((state) => state.canRedo);
+  const undoLabel = useHistoryStore((state) => state.undoLabel);
+  const redoLabel = useHistoryStore((state) => state.redoLabel);
   const zoom = useDiagramStore((state) => state.viewport.zoom);
   const { fitView } = useReactFlow();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadNewProject = async (kind: 'empty' | 'hotel') => {
-    await withAutosaveSuspended(() => {
-      loadProjectIntoStores(kind === 'hotel' ? createHotelExampleProject() : createProject());
-    });
-    await saveNow();
+    await loadNewProjectShared(kind);
     requestAnimationFrame(() => void fitView({ padding: 0.2 }));
+  };
+
+  const onExportPng = async () => {
+    try {
+      await downloadDiagramPng(projectName);
+    } catch (error) {
+      notify('error', error instanceof Error ? error.message : 'Export PNG impossible.');
+    }
   };
 
   const onImportFile = async (file: File) => {
@@ -75,6 +85,7 @@ export function TopBar() {
       await withAutosaveSuspended(() => {
         loadProjectIntoStores(project);
       });
+      useHistoryStore.getState().clear();
       await saveNow();
       notify('info', `Projet « ${project.name} » importé.`);
       for (const warning of warnings) {
@@ -150,6 +161,25 @@ export function TopBar() {
         Exporter
       </Button>
 
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="sm" variant="ghost" aria-label="Exporter en image">
+            <Image aria-hidden />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem
+            onClick={() => downloadDiagramSvg(projectName)}
+            data-testid="export-svg"
+          >
+            Exporter en SVG
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => void onExportPng()} data-testid="export-png">
+            Exporter en PNG
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       <Separator orientation="vertical" className="!h-6" />
 
       <Button size="sm" variant="ghost" onClick={() => void saveNow()} aria-label="Enregistrer">
@@ -167,12 +197,40 @@ export function TopBar() {
       </span>
 
       <div className="ml-auto flex items-center gap-1">
-        <PlannedButton label="Annuler (Ctrl+Z)" disabled={!canUndo}>
-          <Undo2 aria-hidden />
-        </PlannedButton>
-        <PlannedButton label="Rétablir (Ctrl+Shift+Z)" disabled={!canRedo}>
-          <Redo2 aria-hidden />
-        </PlannedButton>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span>
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                aria-label="Annuler (Ctrl+Z)"
+                disabled={!canUndo}
+                onClick={undo}
+              >
+                <Undo2 aria-hidden />
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>{undoLabel ? `Annuler « ${undoLabel} »` : 'Annuler (Ctrl+Z)'}</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span>
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                aria-label="Rétablir (Ctrl+Shift+Z)"
+                disabled={!canRedo}
+                onClick={redo}
+              >
+                <Redo2 aria-hidden />
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            {redoLabel ? `Rétablir « ${redoLabel} »` : 'Rétablir (Ctrl+Shift+Z)'}
+          </TooltipContent>
+        </Tooltip>
         <Separator orientation="vertical" className="!h-6" />
         <Tooltip>
           <TooltipTrigger asChild>

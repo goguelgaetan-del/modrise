@@ -62,6 +62,38 @@ describe('serializeProject / parseProjectFile', () => {
   });
 });
 
+describe('migration réelle v1 → v2 (commentaires graphiques)', () => {
+  function v1Payload(): Record<string, unknown> {
+    const project = createHotelExampleProject();
+    const raw = JSON.parse(serializeProject(project)) as {
+      formatVersion: number;
+      diagram: { comments?: unknown };
+    };
+    raw.formatVersion = 1;
+    delete raw.diagram.comments;
+    return raw as Record<string, unknown>;
+  }
+
+  it("importe un vrai fichier v1 (sans `diagram.comments`) avec une liste de commentaires vide", () => {
+    const parsed = parseProjectFile(JSON.stringify(v1Payload()));
+    expect(parsed.formatVersion).toBe(2);
+    expect(parsed.diagram.comments).toEqual([]);
+  });
+
+  it('ne signale aucun avertissement pour une migration v1 → v2 réussie', () => {
+    const { project, warnings } = parseProjectFileWithWarnings(JSON.stringify(v1Payload()));
+    expect(project.diagram.comments).toEqual([]);
+    expect(warnings).toEqual([]);
+  });
+
+  it('reste stable en v2 après un aller-retour export/import', () => {
+    const migrated = parseProjectFile(JSON.stringify(v1Payload()));
+    const reimported = parseProjectFile(serializeProject(migrated));
+    expect(reimported).toEqual(migrated);
+    expect(reimported.formatVersion).toBe(2);
+  });
+});
+
 describe('parseProjectFileWithWarnings', () => {
   it('ne produit aucun avertissement pour un fichier valide', () => {
     const project = createHotelExampleProject();

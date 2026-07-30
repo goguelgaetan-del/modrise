@@ -2,10 +2,13 @@
  * Inspecteur de propriétés : affiche l'éditeur de l'élément sélectionné
  * (entité ou association) ou un message d'aide.
  */
+import { Copy, Trash2 } from 'lucide-react';
 import { useDiagramStore } from '@/stores/diagram-store';
 import { useProjectStore } from '@/stores/project-store';
+import { copySelection, duplicateSelection } from '@/features/clipboard/actions';
 import { AssociationInspector } from '@/features/associations/components/AssociationInspector';
 import { EntityInspector } from '@/features/entities/components/EntityInspector';
+import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface InspectorPanelProps {
@@ -44,10 +47,26 @@ export function InspectorPanel({ onRequestDeleteSelection }: InspectorPanelProps
               onRequestDelete={onRequestDeleteSelection}
             />
           ) : selectedNodeIds.length > 1 ? (
-            <p className="text-sm text-muted-foreground">
-              {selectedNodeIds.length} éléments sélectionnés. Sélectionnez un seul élément pour
-              modifier ses propriétés.
-            </p>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {selectedNodeIds.length} éléments sélectionnés. Sélectionnez un seul élément pour
+                modifier ses propriétés.
+              </p>
+              <div className="flex flex-col gap-2">
+                <Button size="sm" variant="outline" onClick={copySelection}>
+                  <Copy aria-hidden />
+                  Copier
+                </Button>
+                <Button size="sm" variant="outline" onClick={duplicateSelection}>
+                  <Copy aria-hidden />
+                  Dupliquer
+                </Button>
+                <Button size="sm" variant="destructive" onClick={onRequestDeleteSelection}>
+                  <Trash2 aria-hidden />
+                  Supprimer la sélection
+                </Button>
+              </div>
+            </div>
           ) : (
             <p className="text-sm text-muted-foreground">
               Sélectionnez une entité ou une association pour modifier ses propriétés.

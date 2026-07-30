@@ -12,6 +12,7 @@ import {
   dataTypeKindLabel,
   defaultDataType,
 } from '@/core/conceptual-model/data-types';
+import { withHistory } from '@/features/history/with-history';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -25,13 +26,17 @@ import {
 interface DataTypeEditorProps {
   value: ConceptualDataType;
   onChange: (value: ConceptualDataType) => void;
+  onFieldFocus?: () => void;
+  onFieldBlur?: () => void;
 }
 
-export function DataTypeEditor({ value, onChange }: DataTypeEditorProps) {
+export function DataTypeEditor({ value, onChange, onFieldFocus, onFieldBlur }: DataTypeEditorProps) {
   const selectId = useId();
 
   const onKindChange = (kind: string) => {
-    onChange(defaultDataType(kind as ConceptualDataTypeKind));
+    withHistory('Modifier le type de la donnée', () =>
+      onChange(defaultDataType(kind as ConceptualDataTypeKind)),
+    );
   };
 
   return (
@@ -60,6 +65,8 @@ export function DataTypeEditor({ value, onChange }: DataTypeEditorProps) {
           value={value.length}
           min={1}
           onChange={(length) => onChange({ kind: 'varchar', length })}
+          onFocus={onFieldFocus}
+          onBlur={onFieldBlur}
         />
       )}
       {value.kind === 'decimal' && (
@@ -69,12 +76,16 @@ export function DataTypeEditor({ value, onChange }: DataTypeEditorProps) {
             value={value.precision}
             min={1}
             onChange={(precision) => onChange({ ...value, precision })}
+            onFocus={onFieldFocus}
+            onBlur={onFieldBlur}
           />
           <NumberField
             label="Échelle"
             value={value.scale}
             min={0}
             onChange={(scale) => onChange({ ...value, scale })}
+            onFocus={onFieldFocus}
+            onBlur={onFieldBlur}
           />
         </>
       )}
@@ -87,9 +98,11 @@ interface NumberFieldProps {
   value: number;
   min: number;
   onChange: (value: number) => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
-function NumberField({ label, value, min, onChange }: NumberFieldProps) {
+function NumberField({ label, value, min, onChange, onFocus, onBlur }: NumberFieldProps) {
   const id = useId();
   return (
     <div className="w-20">
@@ -102,6 +115,8 @@ function NumberField({ label, value, min, onChange }: NumberFieldProps) {
         min={min}
         value={Number.isNaN(value) ? '' : value}
         onChange={(event) => onChange(event.target.valueAsNumber)}
+        onFocus={onFocus}
+        onBlur={onBlur}
         className="h-8"
       />
     </div>

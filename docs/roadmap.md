@@ -48,16 +48,26 @@
       `ProjectSettings.sqlDialect` et conservé à l'import/export
 - [ ] Coloration syntaxique du SQL (si légère)
 
-## v0.4 — Expérience utilisateur
+## v0.4 — Expérience utilisateur (terminé)
 
-- [ ] Annuler / rétablir (une entrée par geste, pas par pixel)
-- [ ] Copier-coller, duplication
-- [ ] Raccourcis clavier complets
-- [ ] Export PNG / SVG (diagramme entier, SVG vectoriel)
-- [ ] Menu contextuel, panneaux redimensionnables
+- [x] Annuler / rétablir (une entrée par geste, pas par pixel — voir
+      [editor-history.md](editor-history.md))
+- [x] Copier-coller, duplication (presse-papiers interne, voir
+      [clipboard.md](clipboard.md))
+- [x] Sélection multiple : déplacement/suppression/duplication/copie groupés
+- [x] Commentaires graphiques (nœuds purement visuels, migration de format
+      v1 → v2)
+- [x] Menu contextuel (canvas vide, entité, association, commentaire)
+- [x] Raccourcis clavier complets (annuler/rétablir, presse-papiers,
+      sélection, fichiers)
+- [x] Export PNG / SVG (diagramme entier, SVG réellement vectoriel — voir
+      [diagram-export.md](diagram-export.md))
+- [x] Garde-fou de fermeture d'onglet (modifications non enregistrées),
+      état vide du canvas
 
 ## v1.0 — Stabilisation
 
+- [ ] Panneaux redimensionnables
 - [ ] Documentation complète
 - [ ] Couverture de tests renforcée
 - [ ] Exemples supplémentaires (e-commerce, bibliothèque…)

@@ -17,7 +17,7 @@ import type { SqlDialectId } from '../sql/dialect';
 import { createId } from '../id';
 
 /** Version du format de fichier / de persistance. À incrémenter avec une migration. */
-export const CURRENT_FORMAT_VERSION = 1;
+export const CURRENT_FORMAT_VERSION = 2;
 
 export interface ModriseProject {
   id: string;
