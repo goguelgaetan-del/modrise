@@ -75,6 +75,14 @@ interface ProjectState {
     patch: { role?: string; cardinality?: Cardinality },
   ) => void;
   removeParticipation: (associationId: string, participationId: string) => void;
+
+  /**
+   * Ajoute des entités et associations déjà entièrement formées (nouveaux
+   * ids, participations déjà remappées) — utilisé par le collage et la
+   * duplication (`src/features/clipboard/`), qui construisent ces objets en
+   * amont pour ne jamais partager de référence avec l'original.
+   */
+  pasteEntitiesAndAssociations: (entities: Entity[], associations: Association[]) => void;
 }
 
 const initialProject = createProject();
@@ -295,6 +303,14 @@ export const useProjectStore = create<ProjectState>()(
           association.participations = association.participations.filter(
             (p) => p.id !== participationId,
           );
+          touch(state);
+        });
+      },
+
+      pasteEntitiesAndAssociations: (entities, associations) => {
+        set((state) => {
+          state.conceptualModel.entities.push(...entities);
+          state.conceptualModel.associations.push(...associations);
           touch(state);
         });
       },
