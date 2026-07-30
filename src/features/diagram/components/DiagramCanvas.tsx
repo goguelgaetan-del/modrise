@@ -6,7 +6,7 @@
  * les interactions (déplacement, sélection, connexion) sont retraduites en
  * actions de store par les gestionnaires ci-dessous.
  */
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import {
   Background,
   BackgroundVariant,
@@ -20,14 +20,21 @@ import '@xyflow/react/dist/style.css';
 import { useDiagramStore } from '@/stores/diagram-store';
 import { useProjectStore } from '@/stores/project-store';
 import { useUiStore } from '@/stores/ui-store';
+import { useHistoryStore } from '@/stores/history-store';
+import type { EditorSnapshot } from '@/stores/history-store';
+import { captureEditorSnapshot, withHistory } from '@/features/history/with-history';
 import { useValidation } from '@/features/validation/use-validation';
 import { toReactFlowEdges, toReactFlowNodes, type ModriseNode } from '../adapters/to-react-flow';
 import { AssociationNode } from '../nodes/AssociationNode';
 import { EntityNode } from '../nodes/EntityNode';
+import { CommentNode } from '../nodes/CommentNode';
 import { ParticipationEdge } from '../edges/ParticipationEdge';
 import { useKeyboardShortcuts } from '../hooks/use-keyboard-shortcuts';
+import { EmptyCanvasState } from './EmptyCanvasState';
+import { CanvasContextMenu } from './CanvasContextMenu';
+import { useContextMenu } from '../hooks/use-context-menu';
 
-const nodeTypes = { entity: EntityNode, association: AssociationNode };
+const nodeTypes = { entity: EntityNode, association: AssociationNode, comment: CommentNode };
 const edgeTypes = { participation: ParticipationEdge };
 
 const GRID_SIZE = 16;
@@ -38,6 +45,7 @@ interface DiagramCanvasProps {
 
 export function DiagramCanvas({ onRequestDeleteSelection }: DiagramCanvasProps) {
   const diagramNodes = useDiagramStore((state) => state.nodes);
+  const comments = useDiagramStore((state) => state.comments);
   const viewport = useDiagramStore((state) => state.viewport);
   const selectedNodeIds = useDiagramStore((state) => state.selectedNodeIds);
   const moveNode = useDiagramStore((state) => state.moveNode);
@@ -53,10 +61,13 @@ export function DiagramCanvas({ onRequestDeleteSelection }: DiagramCanvasProps) 
 
   const { errorOwnerIds, errorParticipationIds } = useValidation();
   useKeyboardShortcuts(onRequestDeleteSelection);
+  const contextMenu = useContextMenu();
+
+  const dragSnapshotRef = useRef<EditorSnapshot | null>(null);
 
   const nodes = useMemo(
-    () => toReactFlowNodes(diagramNodes, conceptualModel, selectedNodeIds, errorOwnerIds),
-    [diagramNodes, conceptualModel, selectedNodeIds, errorOwnerIds],
+    () => toReactFlowNodes(diagramNodes, conceptualModel, comments, selectedNodeIds, errorOwnerIds),
+    [diagramNodes, conceptualModel, comments, selectedNodeIds, errorOwnerIds],
   );
   const edges = useMemo(
     () => toReactFlowEdges(diagramNodes, conceptualModel, errorParticipationIds),
@@ -66,9 +77,17 @@ export function DiagramCanvas({ onRequestDeleteSelection }: DiagramCanvasProps) 
   const onNodesChange = useCallback(
     (changes: NodeChange<ModriseNode>[]) => {
       let selection: string[] | null = null;
+      let movedCount = 0;
+      let dragEnded = false;
+
       for (const change of changes) {
         if (change.type === 'position' && change.position) {
+          if (!dragSnapshotRef.current) {
+            dragSnapshotRef.current = captureEditorSnapshot();
+          }
           moveNode(change.id, change.position);
+          movedCount += 1;
+          if (change.dragging === false) dragEnded = true;
         } else if (change.type === 'dimensions' && change.dimensions) {
           setNodeSize(change.id, change.dimensions.width, change.dimensions.height);
         } else if (change.type === 'select') {
@@ -78,8 +97,22 @@ export function DiagramCanvas({ onRequestDeleteSelection }: DiagramCanvasProps) 
             : selection.filter((id) => id !== change.id);
         }
       }
+
       if (selection !== null) {
         setSelection(selection);
+      }
+
+      // Un déplacement continu (glisser-déposer) ne doit produire qu'une
+      // seule entrée d'historique, enregistrée au relâchement du nœud —
+      // jamais à chaque pixel intermédiaire.
+      if (dragEnded && dragSnapshotRef.current) {
+        const before = dragSnapshotRef.current;
+        dragSnapshotRef.current = null;
+        const after = captureEditorSnapshot();
+        if (before.diagramNodes !== after.diagramNodes) {
+          const label = movedCount > 1 ? `Déplacer ${movedCount} éléments` : 'Déplacer un élément';
+          useHistoryStore.getState().pushEntry({ label, before, after });
+        }
       }
     },
     [moveNode, setNodeSize, setSelection],
@@ -110,7 +143,9 @@ export function DiagramCanvas({ onRequestDeleteSelection }: DiagramCanvasProps) 
         );
         return;
       }
-      addParticipation(associationNode.modelId, entityNode.modelId);
+      withHistory('Ajouter une participation', () => {
+        addParticipation(associationNode.modelId, entityNode.modelId);
+      });
     },
     [addParticipation, notify],
   );
@@ -122,8 +157,10 @@ export function DiagramCanvas({ onRequestDeleteSelection }: DiagramCanvasProps) 
     [setViewport],
   );
 
+  const isEmpty = diagramNodes.length === 0;
+
   return (
-    <div className="h-full w-full" data-testid="diagram-canvas">
+    <div className="relative h-full w-full" data-testid="diagram-canvas">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -132,6 +169,9 @@ export function DiagramCanvas({ onRequestDeleteSelection }: DiagramCanvasProps) 
         onNodesChange={onNodesChange}
         onConnect={onConnect}
         onMoveEnd={onMoveEnd}
+        onNodeContextMenu={contextMenu.onNodeContextMenu}
+        onPaneClick={contextMenu.close}
+        onPaneContextMenu={contextMenu.onPaneContextMenu}
         defaultViewport={viewport}
         snapToGrid={snapToGrid}
         snapGrid={[GRID_SIZE, GRID_SIZE]}
@@ -146,6 +186,12 @@ export function DiagramCanvas({ onRequestDeleteSelection }: DiagramCanvasProps) 
         {gridEnabled && <Background variant={BackgroundVariant.Dots} gap={GRID_SIZE} size={1} />}
         <Controls showInteractive={false} />
       </ReactFlow>
+      {isEmpty && <EmptyCanvasState />}
+      <CanvasContextMenu
+        state={contextMenu.state}
+        onClose={contextMenu.close}
+        onRequestDeleteSelection={onRequestDeleteSelection}
+      />
     </div>
   );
 }

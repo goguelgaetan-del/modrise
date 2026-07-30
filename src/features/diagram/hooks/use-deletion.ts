@@ -1,16 +1,21 @@
 /**
  * Suppression des nœuds sélectionnés avec garde-fou : une entité référencée
  * par des associations n'est jamais supprimée silencieusement — une
- * confirmation listant les associations impactées est demandée.
+ * confirmation listant les associations impactées est demandée. Les
+ * commentaires graphiques n'ont pas besoin de cette confirmation (ils ne
+ * sont jamais référencés). Toute la suppression forme une seule entrée
+ * d'historique.
  */
 import { useCallback, useState } from 'react';
 import { associationsReferencingEntity } from '@/core/conceptual-model/operations';
+import { withHistory } from '@/features/history/with-history';
 import { useDiagramStore } from '@/stores/diagram-store';
 import { useProjectStore } from '@/stores/project-store';
 
 export interface PendingDeletion {
   entityIds: string[];
   associationIds: string[];
+  commentIds: string[];
   /** Noms des entités référencées et des associations impactées. */
   blockedEntityNames: string[];
   impactedAssociationNames: string[];
@@ -25,17 +30,20 @@ export interface DeletionApi {
   cancelPendingDeletion: () => void;
 }
 
-function executeDeletion(entityIds: string[], associationIds: string[]): void {
-  const projectStore = useProjectStore.getState();
-  const diagramStore = useDiagramStore.getState();
-  for (const associationId of associationIds) {
-    projectStore.removeAssociation(associationId);
-  }
-  for (const entityId of entityIds) {
-    projectStore.removeEntity(entityId, true);
-  }
-  diagramStore.removeNodesForModel([...entityIds, ...associationIds]);
-  diagramStore.setSelection([]);
+function executeDeletion(entityIds: string[], associationIds: string[], commentIds: string[]): void {
+  const totalCount = entityIds.length + associationIds.length + commentIds.length;
+  if (totalCount === 0) return;
+  withHistory(`Supprimer ${totalCount} élément${totalCount > 1 ? 's' : ''}`, () => {
+    const projectStore = useProjectStore.getState();
+    for (const associationId of associationIds) {
+      projectStore.removeAssociation(associationId);
+    }
+    for (const entityId of entityIds) {
+      projectStore.removeEntity(entityId, true);
+    }
+    useDiagramStore.getState().removeNodesForModel([...entityIds, ...associationIds, ...commentIds]);
+  });
+  useDiagramStore.getState().setSelection([]);
 }
 
 export function useDeletion(): DeletionApi {
@@ -52,6 +60,9 @@ export function useDeletion(): DeletionApi {
       .map((node) => node.modelId);
     const associationIds = selectedNodes
       .filter((node) => node.nodeType === 'association')
+      .map((node) => node.modelId);
+    const commentIds = selectedNodes
+      .filter((node) => node.nodeType === 'comment')
       .map((node) => node.modelId);
 
     const deletedAssociations = new Set(associationIds);
@@ -75,17 +86,18 @@ export function useDeletion(): DeletionApi {
       setPendingDeletion({
         entityIds,
         associationIds,
+        commentIds,
         blockedEntityNames,
         impactedAssociationNames: [...impactedAssociations.values()],
       });
       return;
     }
-    executeDeletion(entityIds, associationIds);
+    executeDeletion(entityIds, associationIds, commentIds);
   }, []);
 
   const confirmPendingDeletion = useCallback(() => {
     if (!pendingDeletion) return;
-    executeDeletion(pendingDeletion.entityIds, pendingDeletion.associationIds);
+    executeDeletion(pendingDeletion.entityIds, pendingDeletion.associationIds, pendingDeletion.commentIds);
     setPendingDeletion(null);
   }, [pendingDeletion]);
 
