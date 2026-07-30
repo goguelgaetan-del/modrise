@@ -46,6 +46,74 @@ test.describe('historique (annuler/rétablir)', () => {
     await page.keyboard.press('Control+z');
     await expect(page.getByTestId('entity-node-CLIENT')).toBeVisible();
   });
+
+  test('un glissement continu ne produit qu’une seule entrée d’historique', async ({ page }) => {
+    const node = page.getByTestId('entity-node-CLIENT');
+    const before = (await node.boundingBox())!;
+
+    await page.mouse.move(before.x + before.width / 2, before.y + 10);
+    await page.mouse.down();
+    // Plusieurs mouvements intermédiaires pendant le même glissement : ils ne
+    // doivent produire aucune entrée d'historique séparée.
+    await page.mouse.move(before.x + before.width / 2 + 40, before.y + 40, { steps: 4 });
+    await page.mouse.move(before.x + before.width / 2 + 120, before.y + 90, { steps: 4 });
+    await page.mouse.up();
+
+    const afterDrag = (await node.boundingBox())!;
+    expect(Math.abs(afterDrag.x - before.x)).toBeGreaterThan(50);
+
+    // Un seul Ctrl+Z doit ramener le nœud exactement à sa position de départ
+    // (et pas seulement partiellement, ce qui indiquerait plusieurs entrées).
+    await page.keyboard.press('Control+z');
+    const afterUndo = (await node.boundingBox())!;
+    expect(Math.round(afterUndo.x)).toBe(Math.round(before.x));
+    expect(Math.round(afterUndo.y)).toBe(Math.round(before.y));
+
+    // Un deuxième Ctrl+Z ne doit rien changer de plus (rien d'autre à annuler).
+    await page.keyboard.press('Control+z');
+    const afterSecondUndo = (await node.boundingBox())!;
+    expect(Math.round(afterSecondUndo.x)).toBe(Math.round(before.x));
+  });
+
+  test('undo/redo déclenche l’autosauvegarde', async ({ page }) => {
+    await page.getByTestId('add-entity').click();
+    await expect(page.getByTestId('save-status')).toHaveText('Enregistré localement', {
+      timeout: 10_000,
+    });
+
+    await page.keyboard.press('Control+z');
+    await expect(page.getByTestId('save-status')).toHaveText('Enregistré localement', {
+      timeout: 10_000,
+    });
+  });
+});
+
+test.describe('raccourcis clavier ignorés dans les champs de saisie', () => {
+  test('Ctrl+C/Ctrl+V dans le champ de nom ne déclenchent pas le presse-papiers interne', async ({
+    page,
+  }) => {
+    await page.getByTestId('entity-node-CLIENT').click();
+    const nameInput = page.getByTestId('entity-name-input');
+    await nameInput.click();
+    await nameInput.selectText();
+
+    const nodesBefore = await page.locator('.react-flow__node').count();
+    await page.keyboard.press('Control+c');
+    await page.keyboard.press('Control+v');
+    // Aucun nouveau nœud collé : le raccourci applicatif n'a pas intercepté
+    // le copier/coller natif du champ.
+    await expect(page.locator('.react-flow__node')).toHaveCount(nodesBefore);
+  });
+
+  test('Ctrl+Z dans un champ de saisie n’annule pas une action de l’éditeur', async ({ page }) => {
+    await page.getByTestId('add-entity').click();
+    const nodesBefore = await page.locator('.react-flow__node').count();
+
+    await page.getByTestId('project-name-input').click();
+    await page.keyboard.press('Control+z');
+    // Toujours le même nombre de nœuds : le Ctrl+Z n'a pas atteint le raccourci global.
+    await expect(page.locator('.react-flow__node')).toHaveCount(nodesBefore);
+  });
 });
 
 test.describe('presse-papiers (copier/coller/dupliquer)', () => {
