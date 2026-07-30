@@ -22,6 +22,7 @@ import { createHotelExampleProject } from '@/core/examples/hotel';
 import { FileFormatError } from '@/core/serialization/file-format';
 import { saveNow, withAutosaveSuspended } from '@/persistence/autosave';
 import { downloadProjectFile, readProjectFile } from '@/features/projects/import-export';
+import { undo, redo } from '@/features/history/with-history';
 import { assembleCurrentProject, loadProjectIntoStores } from '@/stores/project-assembly';
 import { useDiagramStore } from '@/stores/diagram-store';
 import { useHistoryStore } from '@/stores/history-store';
@@ -57,6 +58,8 @@ export function TopBar() {
   const notify = useUiStore((state) => state.notify);
   const canUndo = useHistoryStore((state) => state.canUndo);
   const canRedo = useHistoryStore((state) => state.canRedo);
+  const undoLabel = useHistoryStore((state) => state.undoLabel);
+  const redoLabel = useHistoryStore((state) => state.redoLabel);
   const zoom = useDiagramStore((state) => state.viewport.zoom);
   const { fitView } = useReactFlow();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -65,6 +68,7 @@ export function TopBar() {
     await withAutosaveSuspended(() => {
       loadProjectIntoStores(kind === 'hotel' ? createHotelExampleProject() : createProject());
     });
+    useHistoryStore.getState().clear();
     await saveNow();
     requestAnimationFrame(() => void fitView({ padding: 0.2 }));
   };
@@ -75,6 +79,7 @@ export function TopBar() {
       await withAutosaveSuspended(() => {
         loadProjectIntoStores(project);
       });
+      useHistoryStore.getState().clear();
       await saveNow();
       notify('info', `Projet « ${project.name} » importé.`);
       for (const warning of warnings) {
@@ -167,12 +172,40 @@ export function TopBar() {
       </span>
 
       <div className="ml-auto flex items-center gap-1">
-        <PlannedButton label="Annuler (Ctrl+Z)" disabled={!canUndo}>
-          <Undo2 aria-hidden />
-        </PlannedButton>
-        <PlannedButton label="Rétablir (Ctrl+Shift+Z)" disabled={!canRedo}>
-          <Redo2 aria-hidden />
-        </PlannedButton>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span>
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                aria-label="Annuler (Ctrl+Z)"
+                disabled={!canUndo}
+                onClick={undo}
+              >
+                <Undo2 aria-hidden />
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>{undoLabel ? `Annuler « ${undoLabel} »` : 'Annuler (Ctrl+Z)'}</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span>
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                aria-label="Rétablir (Ctrl+Shift+Z)"
+                disabled={!canRedo}
+                onClick={redo}
+              >
+                <Redo2 aria-hidden />
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            {redoLabel ? `Rétablir « ${redoLabel} »` : 'Rétablir (Ctrl+Shift+Z)'}
+          </TooltipContent>
+        </Tooltip>
         <Separator orientation="vertical" className="!h-6" />
         <Tooltip>
           <TooltipTrigger asChild>
