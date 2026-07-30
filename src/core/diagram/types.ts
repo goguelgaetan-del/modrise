@@ -38,6 +38,14 @@ export interface DiagramNode {
   };
   width?: number;
   height?: number;
+  /**
+   * Verrouillé : reste sélectionnable et éditable, mais ni déplaçable ni
+   * repositionné par l'auto-layout. Concerne uniquement le diagramme,
+   * jamais le modèle conceptuel. Absent (traité comme `false`) sur les
+   * nœuds créés avant le v0.5 (format v2), ajouté explicitement par la
+   * migration v2 → v3.
+   */
+  locked?: boolean;
 }
 
 /** Commentaire purement graphique : jamais présent dans le modèle conceptuel. */

@@ -6,7 +6,7 @@
  */
 import { memo } from 'react';
 import type { NodeProps, Node } from '@xyflow/react';
-import { Asterisk, Fingerprint, KeyRound } from 'lucide-react';
+import { Asterisk, Fingerprint, KeyRound, Lock } from 'lucide-react';
 import { formatDataType } from '@/core/conceptual-model/data-types';
 import { isAlternateIdentifierAttribute, isPrimaryAttribute } from '@/core/conceptual-model/operations';
 import { cn } from '@/lib/utils';
@@ -17,7 +17,7 @@ export const EntityNode = memo(function EntityNode({
   data,
   selected,
 }: NodeProps<Node<EntityNodeData, 'entity'>>) {
-  const { entity, hasErrors } = data;
+  const { entity, hasErrors, locked } = data;
   return (
     <div
       className={cn(
@@ -30,10 +30,16 @@ export const EntityNode = memo(function EntityNode({
       <NodeHandles />
       <header
         className={cn(
-          'rounded-t border-b bg-muted/60 px-3 py-1.5 text-center text-sm font-semibold tracking-wide',
+          'relative rounded-t border-b bg-muted/60 px-3 py-1.5 text-center text-sm font-semibold tracking-wide',
           hasErrors && 'text-destructive',
         )}
       >
+        {locked && (
+          <Lock
+            aria-label="Nœud verrouillé"
+            className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground"
+          />
+        )}
         {entity.name.trim() || <span className="italic text-muted-foreground">(sans nom)</span>}
       </header>
       <ul className="px-3 py-1.5 text-xs leading-5">

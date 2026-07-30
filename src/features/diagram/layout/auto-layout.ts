@@ -24,16 +24,15 @@ export type LayoutPositions = Map<string, { x: number; y: number }>;
  * Les commentaires sont inclus comme nœuds sans arête — dagre les place
  * donc à l'écart du reste plutôt que de tenter de les rapprocher de leur
  * position relative précédente (comportement documenté, voir
- * docs/auto-layout.md). `excludedNodeIds` (nœuds verrouillés — voir
- * `locked-nodes.ts`) sont inclus dans le graphe comme obstacles mais leur
- * position calculée n'est jamais retournée : l'appelant doit conserver leur
- * position actuelle.
+ * docs/auto-layout.md). Un nœud verrouillé (`locked: true`) est inclus dans
+ * le graphe comme obstacle mais sa position calculée n'est jamais retournée
+ * — l'appelant doit conserver sa position actuelle (même principe que
+ * `computeAlignment`/`computeDistribution`, voir `src/core/diagram/align.ts`).
  */
 export async function computeAutoLayout(
   nodes: DiagramNode[],
   model: ConceptualModel,
   direction: LayoutDirection,
-  excludedNodeIds: ReadonlySet<string> = new Set(),
 ): Promise<LayoutPositions> {
   const dagre = await import('@dagrejs/dagre');
   const graph = new dagre.graphlib.Graph({ multigraph: true });
@@ -70,7 +69,7 @@ export async function computeAutoLayout(
 
   const positions: LayoutPositions = new Map();
   for (const node of nodes) {
-    if (excludedNodeIds.has(node.id)) continue;
+    if (node.locked) continue;
     const layoutNode = graph.node(node.id);
     if (!layoutNode) continue;
     const width = node.width ?? DEFAULT_NODE_WIDTH;

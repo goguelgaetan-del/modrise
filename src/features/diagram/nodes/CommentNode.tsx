@@ -5,7 +5,7 @@
  */
 import { memo, useState } from 'react';
 import type { NodeProps, Node } from '@xyflow/react';
-import { StickyNote } from 'lucide-react';
+import { Lock, StickyNote } from 'lucide-react';
 import { useDiagramStore } from '@/stores/diagram-store';
 import { withHistory } from '@/features/history/with-history';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,7 +16,7 @@ export const CommentNode = memo(function CommentNode({
   data,
   selected,
 }: NodeProps<Node<CommentNodeData, 'comment'>>) {
-  const { comment } = data;
+  const { comment, locked } = data;
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(comment.text);
   const updateCommentText = useDiagramStore((state) => state.updateCommentText);
@@ -44,6 +44,7 @@ export const CommentNode = memo(function CommentNode({
       <div className="mb-1 flex items-center gap-1 text-amber-700 dark:text-amber-300">
         <StickyNote aria-hidden className="h-3 w-3" />
         <span className="text-[10px] font-semibold uppercase tracking-wide">Commentaire</span>
+        {locked && <Lock aria-label="Nœud verrouillé" className="ml-auto h-3 w-3" />}
       </div>
       {editing ? (
         <Textarea

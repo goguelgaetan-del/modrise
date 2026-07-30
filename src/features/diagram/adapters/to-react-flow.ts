@@ -13,15 +13,18 @@ import { closestSides } from '@/core/diagram/geometry';
 export interface EntityNodeData extends Record<string, unknown> {
   entity: Entity;
   hasErrors: boolean;
+  locked: boolean;
 }
 
 export interface AssociationNodeData extends Record<string, unknown> {
   association: Association;
   hasErrors: boolean;
+  locked: boolean;
 }
 
 export interface CommentNodeData extends Record<string, unknown> {
   comment: DiagramComment;
+  locked: boolean;
 }
 
 export interface ParticipationEdgeData extends Record<string, unknown> {
@@ -55,7 +58,8 @@ export function toReactFlowNodes(
         type: 'entity',
         position: diagramNode.position,
         selected: selected.has(diagramNode.id),
-        data: { entity, hasErrors: modelIdsWithErrors.has(entity.id) },
+        draggable: !diagramNode.locked,
+        data: { entity, hasErrors: modelIdsWithErrors.has(entity.id), locked: diagramNode.locked ?? false },
       });
     } else if (diagramNode.nodeType === 'association') {
       const association = model.associations.find((a) => a.id === diagramNode.modelId);
@@ -65,7 +69,12 @@ export function toReactFlowNodes(
         type: 'association',
         position: diagramNode.position,
         selected: selected.has(diagramNode.id),
-        data: { association, hasErrors: modelIdsWithErrors.has(association.id) },
+        draggable: !diagramNode.locked,
+        data: {
+          association,
+          hasErrors: modelIdsWithErrors.has(association.id),
+          locked: diagramNode.locked ?? false,
+        },
       });
     } else if (diagramNode.nodeType === 'comment') {
       const comment = commentById.get(diagramNode.modelId);
@@ -77,7 +86,8 @@ export function toReactFlowNodes(
         width: diagramNode.width,
         height: diagramNode.height,
         selected: selected.has(diagramNode.id),
-        data: { comment },
+        draggable: !diagramNode.locked,
+        data: { comment, locked: diagramNode.locked ?? false },
       });
     }
   }

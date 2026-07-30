@@ -4,10 +4,23 @@
  * du `DropdownMenu` sous-jacent). Réutilise les composants shadcn/ui
  * existants plutôt qu'un menu personnalisé.
  */
-import { Copy, Crosshair, Focus, MessageSquareText, Pencil, Plus, Shapes, Square, Trash2 } from 'lucide-react';
+import {
+  Copy,
+  Crosshair,
+  Focus,
+  Lock,
+  MessageSquareText,
+  Pencil,
+  Plus,
+  Shapes,
+  Square,
+  Trash2,
+  Unlock,
+} from 'lucide-react';
 import { useReactFlow } from '@xyflow/react';
 import { copySelection, duplicateSelection, hasClipboardContent, pasteClipboard } from '@/features/clipboard/actions';
 import { createAssociationAt, createCommentAt, createEntityAt } from '@/features/diagram/actions';
+import { withHistory } from '@/features/history/with-history';
 import { useDiagramStore } from '@/stores/diagram-store';
 import { useProjectStore } from '@/stores/project-store';
 import {
@@ -27,6 +40,9 @@ interface CanvasContextMenuProps {
 
 export function CanvasContextMenu({ state, onClose, onRequestDeleteSelection }: CanvasContextMenuProps) {
   const { fitView } = useReactFlow();
+  const nodeLocked = useDiagramStore((s) =>
+    state?.kind === 'node' ? (s.nodes.find((n) => n.id === state.nodeId)?.locked ?? false) : false,
+  );
   if (!state) return null;
 
   const selectAndAct = (act: () => void) => {
@@ -128,6 +144,19 @@ export function CanvasContextMenu({ state, onClose, onRequestDeleteSelection }: 
               }}
             >
               <Crosshair aria-hidden /> Centrer sur l'élément
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => {
+                const label = nodeLocked ? 'Déverrouiller un nœud' : 'Verrouiller un nœud';
+                selectAndAct(() =>
+                  withHistory(label, () =>
+                    useDiagramStore.getState().setNodeLocked(state.nodeId, !nodeLocked),
+                  ),
+                );
+              }}
+            >
+              {nodeLocked ? <Unlock aria-hidden /> : <Lock aria-hidden />}
+              {nodeLocked ? 'Déverrouiller' : 'Verrouiller'}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem

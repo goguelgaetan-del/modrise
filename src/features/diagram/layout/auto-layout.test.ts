@@ -156,14 +156,13 @@ describe('computeAutoLayout', () => {
     expect(positions.size).toBe(2);
   });
 
-  it('exclut les nœuds indiqués (verrouillés) des positions calculées', async () => {
+  it('exclut les nœuds verrouillés des positions calculées', async () => {
     const project = createHotelExampleProject();
-    const excluded = new Set([project.diagram.nodes[0]!.id]);
+    project.diagram.nodes[0]!.locked = true;
     const positions = await computeAutoLayout(
       project.diagram.nodes,
       project.conceptualModel,
       'horizontal',
-      excluded,
     );
     expect(positions.has(project.diagram.nodes[0]!.id)).toBe(false);
     expect(positions.size).toBe(project.diagram.nodes.length - 1);

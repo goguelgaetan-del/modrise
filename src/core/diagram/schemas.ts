@@ -8,6 +8,7 @@ export const diagramNodeSchema = z.object({
   position: z.object({ x: z.number(), y: z.number() }),
   width: z.number().positive().optional(),
   height: z.number().positive().optional(),
+  locked: z.boolean().optional(),
 });
 
 export const diagramViewportSchema = z.object({
