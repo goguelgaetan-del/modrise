@@ -17,11 +17,10 @@ import {
   Sun,
   Undo2,
 } from 'lucide-react';
-import { createProject } from '@/core/project/types';
-import { createHotelExampleProject } from '@/core/examples/hotel';
 import { FileFormatError } from '@/core/serialization/file-format';
 import { saveNow, withAutosaveSuspended } from '@/persistence/autosave';
 import { downloadProjectFile, readProjectFile } from '@/features/projects/import-export';
+import { loadNewProject as loadNewProjectShared } from '@/features/projects/new-project';
 import { undo, redo } from '@/features/history/with-history';
 import { assembleCurrentProject, loadProjectIntoStores } from '@/stores/project-assembly';
 import { useDiagramStore } from '@/stores/diagram-store';
@@ -65,11 +64,7 @@ export function TopBar() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadNewProject = async (kind: 'empty' | 'hotel') => {
-    await withAutosaveSuspended(() => {
-      loadProjectIntoStores(kind === 'hotel' ? createHotelExampleProject() : createProject());
-    });
-    useHistoryStore.getState().clear();
-    await saveNow();
+    await loadNewProjectShared(kind);
     requestAnimationFrame(() => void fitView({ padding: 0.2 }));
   };
 

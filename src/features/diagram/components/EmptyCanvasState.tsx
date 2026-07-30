@@ -5,10 +5,7 @@
  */
 import { useReactFlow } from '@xyflow/react';
 import { FolderOpen, Sparkles, Square, Upload } from 'lucide-react';
-import { createHotelExampleProject } from '@/core/examples/hotel';
-import { saveNow, withAutosaveSuspended } from '@/persistence/autosave';
-import { loadProjectIntoStores } from '@/stores/project-assembly';
-import { useHistoryStore } from '@/stores/history-store';
+import { loadNewProject } from '@/features/projects/new-project';
 import { createEntityAt } from '@/features/diagram/actions';
 import { Button } from '@/components/ui/button';
 
@@ -21,11 +18,7 @@ export function EmptyCanvasState() {
   };
 
   const onOpenExample = async () => {
-    await withAutosaveSuspended(() => {
-      loadProjectIntoStores(createHotelExampleProject());
-    });
-    useHistoryStore.getState().clear();
-    await saveNow();
+    await loadNewProject('hotel');
     requestAnimationFrame(() => void fitView({ padding: 0.2 }));
   };
 
