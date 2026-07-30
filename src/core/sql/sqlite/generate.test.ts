@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { createAttribute, createEntity } from '../../conceptual-model/factories';
 import { createHotelExampleProject } from '../../examples/hotel';
 import { transformToLogicalModel } from '../../transformations/mcd-to-mld';
 import type { LogicalTransformationResult } from '../../transformations/mcd-to-mld';
@@ -143,6 +144,24 @@ describe('generateSqliteScript — PRAGMA et contraintes inline', () => {
     const { sql } = generate(oneToOneModel());
     expect(sql).toContain('UNIQUE');
     expect(sql).toContain('REFERENCES "personne"');
+  });
+
+  it('génère une contrainte unique multi-colonnes depuis un identifiant alternatif composé', () => {
+    const conceptual: ConceptualModel = { entities: [], associations: [] };
+    const entity = createEntity({ name: 'RESERVATION' });
+    const chambre = createAttribute({ name: 'chambre', dataType: { kind: 'integer' } });
+    const dateArrivee = createAttribute({ name: 'date_arrivee', dataType: { kind: 'date' } });
+    entity.attributes.push(chambre, dateArrivee);
+    entity.identifiers.push({
+      id: 'alt-composite',
+      attributeIds: [chambre.id, dateArrivee.id],
+      primary: false,
+    });
+    conceptual.entities.push(entity);
+    const { sql } = generate(conceptual);
+    expect(sql).toContain(
+      'CONSTRAINT "uq_reservation_chambre_date_arrivee" UNIQUE ("chambre", "date_arrivee")',
+    );
   });
 
   it('désambiguïse les FK réflexives multiples par qualificatif de rôle', () => {

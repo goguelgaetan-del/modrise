@@ -1,8 +1,6 @@
 /**
- * Inspecteur d'entité : nom, description, attributs et identifiant primaire.
- *
- * TODO(v0.2) : gestion complète des identifiants alternatifs (création,
- * nommage, composition) — le modèle et la validation les supportent déjà.
+ * Inspecteur d'entité : nom, description, attributs et identifiants
+ * (primaire et alternatifs, voir `IdentifiersEditor`).
  */
 import { useId } from 'react';
 import { Trash2 } from 'lucide-react';
@@ -10,6 +8,7 @@ import type { Entity } from '@/core/conceptual-model/types';
 import { useProjectStore } from '@/stores/project-store';
 import { useFieldHistory } from '@/features/history/use-field-history';
 import { AttributeListEditor } from '@/components/common/AttributeListEditor';
+import { IdentifiersEditor } from './IdentifiersEditor';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -63,6 +62,8 @@ export function EntityInspector({ entity, onRequestDelete }: EntityInspectorProp
 
       <Separator />
       <AttributeListEditor ownerId={entity.id} attributes={entity.attributes} entity={entity} />
+      <Separator />
+      <IdentifiersEditor entity={entity} />
       <Separator />
 
       <Button variant="destructive" size="sm" onClick={onRequestDelete}>

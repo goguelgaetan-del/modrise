@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { createAttribute, createEntity } from '../../conceptual-model/factories';
 import { createHotelExampleProject } from '../../examples/hotel';
 import { transformToLogicalModel } from '../../transformations/mcd-to-mld';
 import type { LogicalTransformationResult } from '../../transformations/mcd-to-mld';
@@ -60,6 +61,24 @@ describe('generateMySqlScript — tables et contraintes', () => {
     expect(sql).toContain('CONSTRAINT `uq_client_email` UNIQUE (`email`)');
     const { sql: composite } = generate(oneToManyCompositeKeyModel());
     expect(composite).toContain('PRIMARY KEY (`code`, `version`)');
+  });
+
+  it('génère une contrainte unique multi-colonnes depuis un identifiant alternatif composé', () => {
+    const conceptual: ConceptualModel = { entities: [], associations: [] };
+    const entity = createEntity({ name: 'RESERVATION' });
+    const chambre = createAttribute({ name: 'chambre', dataType: { kind: 'integer' } });
+    const dateArrivee = createAttribute({ name: 'date_arrivee', dataType: { kind: 'date' } });
+    entity.attributes.push(chambre, dateArrivee);
+    entity.identifiers.push({
+      id: 'alt-composite',
+      attributeIds: [chambre.id, dateArrivee.id],
+      primary: false,
+    });
+    conceptual.entities.push(entity);
+    const { sql } = generate(conceptual);
+    expect(sql).toContain(
+      'CONSTRAINT `uq_reservation_chambre_date_arrivee` UNIQUE (`chambre`, `date_arrivee`)',
+    );
   });
 
   it('génère une clé étrangère simple et composée via ALTER TABLE', () => {

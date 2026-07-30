@@ -1,12 +1,14 @@
 /**
  * Nœud d'entité : rectangle avec en-tête (nom) et liste des attributs.
- * L'identifiant primaire est distingué par une icône de clé et un souligné.
+ * Trois statuts distincts, jamais distingués par la seule couleur : clé
+ * primaire (icône clé + souligné), identifiant alternatif (icône empreinte)
+ * et attribut simplement unique (icône astérisque).
  */
 import { memo } from 'react';
 import type { NodeProps, Node } from '@xyflow/react';
-import { KeyRound } from 'lucide-react';
+import { Asterisk, Fingerprint, KeyRound } from 'lucide-react';
 import { formatDataType } from '@/core/conceptual-model/data-types';
-import { isPrimaryAttribute } from '@/core/conceptual-model/operations';
+import { isAlternateIdentifierAttribute, isPrimaryAttribute } from '@/core/conceptual-model/operations';
 import { cn } from '@/lib/utils';
 import type { EntityNodeData } from '../adapters/to-react-flow';
 import { NodeHandles } from './NodeHandles';
@@ -40,17 +42,32 @@ export const EntityNode = memo(function EntityNode({
         )}
         {entity.attributes.map((attribute) => {
           const primary = isPrimaryAttribute(entity, attribute.id);
+          const alternate = !primary && isAlternateIdentifierAttribute(entity, attribute.id);
           return (
             <li key={attribute.id} className="flex items-center gap-1.5 whitespace-nowrap">
               <span className="w-3.5 shrink-0">
-                {primary && (
+                {primary ? (
                   <KeyRound
                     aria-label="Identifiant primaire"
                     className="h-3 w-3 text-amber-600 dark:text-amber-400"
                   />
+                ) : alternate ? (
+                  <Fingerprint
+                    aria-label="Identifiant alternatif"
+                    className="h-3 w-3 text-indigo-600 dark:text-indigo-400"
+                  />
+                ) : (
+                  attribute.unique && (
+                    <Asterisk aria-label="Attribut unique" className="h-3 w-3 text-muted-foreground" />
+                  )
                 )}
               </span>
-              <span className={cn(primary && 'font-medium underline underline-offset-2')}>
+              <span
+                className={cn(
+                  primary && 'font-medium underline underline-offset-2',
+                  alternate && 'underline decoration-dotted underline-offset-2',
+                )}
+              >
                 {attribute.name.trim() || '(sans nom)'}
               </span>
               <span className="text-muted-foreground">: {formatDataType(attribute.dataType)}</span>

@@ -70,6 +70,84 @@ describe('projectStore — attributs et identifiants', () => {
   });
 });
 
+describe('projectStore — identifiants alternatifs', () => {
+  function currentEntity() {
+    const entity = store().conceptualModel.entities[0];
+    if (!entity) throw new Error('entité attendue');
+    return entity;
+  }
+
+  it('crée un identifiant alternatif vide', () => {
+    const entity = store().addEntity();
+    const identifier = store().addAlternateIdentifier(entity.id);
+    expect(identifier?.primary).toBe(false);
+    expect(currentEntity().identifiers).toHaveLength(2);
+  });
+
+  it('renomme un identifiant alternatif', () => {
+    const entity = store().addEntity();
+    const identifier = store().addAlternateIdentifier(entity.id)!;
+    store().renameIdentifier(entity.id, identifier.id, 'UQ_EMAIL');
+    expect(currentEntity().identifiers.find((i) => i.id === identifier.id)?.name).toBe('UQ_EMAIL');
+  });
+
+  it('ajoute et retire un attribut d’un identifiant alternatif', () => {
+    const entity = store().addEntity();
+    store().addAttribute(entity.id);
+    const attribute = currentEntity().attributes[1]!;
+    const identifier = store().addAlternateIdentifier(entity.id)!;
+
+    store().addAttributeToIdentifier(entity.id, identifier.id, attribute.id);
+    expect(
+      currentEntity().identifiers.find((i) => i.id === identifier.id)?.attributeIds,
+    ).toEqual([attribute.id]);
+
+    store().removeAttributeFromIdentifier(entity.id, identifier.id, attribute.id);
+    expect(
+      currentEntity().identifiers.find((i) => i.id === identifier.id)?.attributeIds,
+    ).toEqual([]);
+  });
+
+  it('réordonne les attributs d’un identifiant', () => {
+    const entity = store().addEntity();
+    store().addAttribute(entity.id);
+    store().addAttribute(entity.id);
+    const [a, b] = currentEntity().attributes.slice(1);
+    const identifier = store().addAlternateIdentifier(entity.id)!;
+    store().addAttributeToIdentifier(entity.id, identifier.id, a!.id);
+    store().addAttributeToIdentifier(entity.id, identifier.id, b!.id);
+
+    store().moveIdentifierAttribute(entity.id, identifier.id, b!.id, 'up');
+    expect(
+      currentEntity().identifiers.find((i) => i.id === identifier.id)?.attributeIds,
+    ).toEqual([b!.id, a!.id]);
+  });
+
+  it('supprime un identifiant alternatif mais jamais le primaire', () => {
+    const entity = store().addEntity();
+    const identifier = store().addAlternateIdentifier(entity.id)!;
+    const primaryId = currentEntity().identifiers.find((i) => i.primary)!.id;
+
+    store().removeIdentifier(entity.id, primaryId);
+    expect(currentEntity().identifiers.some((i) => i.primary)).toBe(true);
+
+    store().removeIdentifier(entity.id, identifier.id);
+    expect(currentEntity().identifiers).toHaveLength(1);
+  });
+
+  it('promeut un identifiant alternatif en primaire (l’ancien primaire devient alternatif)', () => {
+    const entity = store().addEntity();
+    const oldPrimaryId = currentEntity().identifiers.find((i) => i.primary)!.id;
+    const identifier = store().addAlternateIdentifier(entity.id)!;
+
+    store().promoteIdentifierToPrimary(entity.id, identifier.id);
+
+    expect(currentEntity().identifiers.find((i) => i.id === identifier.id)?.primary).toBe(true);
+    expect(currentEntity().identifiers.find((i) => i.id === oldPrimaryId)?.primary).toBe(false);
+    expect(currentEntity().identifiers.filter((i) => i.primary)).toHaveLength(1);
+  });
+});
+
 describe('projectStore — associations et participations', () => {
   it('crée une association et des participations', () => {
     const entity = store().addEntity();
