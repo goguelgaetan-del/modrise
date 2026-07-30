@@ -10,6 +10,7 @@ import {
   FilePlus2,
   Focus,
   FolderOpen,
+  Image,
   Moon,
   Redo2,
   Save,
@@ -21,6 +22,8 @@ import { FileFormatError } from '@/core/serialization/file-format';
 import { saveNow, withAutosaveSuspended } from '@/persistence/autosave';
 import { downloadProjectFile, readProjectFile } from '@/features/projects/import-export';
 import { loadNewProject as loadNewProjectShared } from '@/features/projects/new-project';
+import { downloadDiagramSvg } from '@/features/diagram/export/export-svg';
+import { downloadDiagramPng } from '@/features/diagram/export/export-png';
 import { undo, redo } from '@/features/history/with-history';
 import { assembleCurrentProject, loadProjectIntoStores } from '@/stores/project-assembly';
 import { useDiagramStore } from '@/stores/diagram-store';
@@ -66,6 +69,14 @@ export function TopBar() {
   const loadNewProject = async (kind: 'empty' | 'hotel') => {
     await loadNewProjectShared(kind);
     requestAnimationFrame(() => void fitView({ padding: 0.2 }));
+  };
+
+  const onExportPng = async () => {
+    try {
+      await downloadDiagramPng(projectName);
+    } catch (error) {
+      notify('error', error instanceof Error ? error.message : 'Export PNG impossible.');
+    }
   };
 
   const onImportFile = async (file: File) => {
@@ -149,6 +160,25 @@ export function TopBar() {
         <Download aria-hidden />
         Exporter
       </Button>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="sm" variant="ghost" aria-label="Exporter en image">
+            <Image aria-hidden />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem
+            onClick={() => downloadDiagramSvg(projectName)}
+            data-testid="export-svg"
+          >
+            Exporter en SVG
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => void onExportPng()} data-testid="export-png">
+            Exporter en PNG
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <Separator orientation="vertical" className="!h-6" />
 

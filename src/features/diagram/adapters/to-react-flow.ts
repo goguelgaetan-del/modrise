@@ -8,6 +8,7 @@ import type { Edge, Node } from '@xyflow/react';
 import type { Association, ConceptualModel, Entity } from '@/core/conceptual-model/types';
 import { formatCardinality } from '@/core/conceptual-model/types';
 import type { DiagramComment, DiagramNode } from '@/core/diagram/types';
+import { closestSides } from '@/core/diagram/geometry';
 
 export interface EntityNodeData extends Record<string, unknown> {
   entity: Entity;
@@ -34,28 +35,6 @@ export type ModriseNode =
   | Node<AssociationNodeData, 'association'>
   | Node<CommentNodeData, 'comment'>;
 export type ModriseEdge = Edge<ParticipationEdgeData, 'participation'>;
-
-/** Côtés de connexion : chaque nœud expose une paire de handles par côté. */
-export type HandleSide = 'top' | 'right' | 'bottom' | 'left';
-
-function nodeCenter(node: DiagramNode): { x: number; y: number } {
-  return {
-    x: node.position.x + (node.width ?? 200) / 2,
-    y: node.position.y + (node.height ?? 100) / 2,
-  };
-}
-
-/** Choisit le couple de côtés le plus naturel entre deux nœuds. */
-function closestSides(from: DiagramNode, to: DiagramNode): { from: HandleSide; to: HandleSide } {
-  const a = nodeCenter(from);
-  const b = nodeCenter(to);
-  const dx = b.x - a.x;
-  const dy = b.y - a.y;
-  if (Math.abs(dx) >= Math.abs(dy)) {
-    return dx >= 0 ? { from: 'right', to: 'left' } : { from: 'left', to: 'right' };
-  }
-  return dy >= 0 ? { from: 'bottom', to: 'top' } : { from: 'top', to: 'bottom' };
-}
 
 export function toReactFlowNodes(
   diagramNodes: DiagramNode[],

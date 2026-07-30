@@ -5,6 +5,7 @@
 import { useEffect } from 'react';
 import { createHotelExampleProject } from '@/core/examples/hotel';
 import { startAutosave, withAutosaveSuspended } from '@/persistence/autosave';
+import { startUnsavedChangesGuard } from '@/persistence/unsaved-changes-guard';
 import { loadLastProject } from '@/persistence/project-repository';
 import { loadProjectIntoStores } from '@/stores/project-assembly';
 import { useUiStore } from '@/stores/ui-store';
@@ -38,6 +39,7 @@ export default function App() {
   useEffect(() => {
     let stopAutosave: (() => void) | undefined;
     let cancelled = false;
+    const stopUnsavedChangesGuard = startUnsavedChangesGuard();
     void bootstrap().then(() => {
       if (!cancelled) {
         stopAutosave = startAutosave();
@@ -46,6 +48,7 @@ export default function App() {
     return () => {
       cancelled = true;
       stopAutosave?.();
+      stopUnsavedChangesGuard();
     };
   }, []);
 
