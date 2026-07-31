@@ -5,25 +5,69 @@
  * navigation entre panneaux, organisation automatique, sauvegarde, export).
  * Les seuils sont volontairement larges — ils détectent un blocage réel,
  * pas une variation de quelques millisecondes.
+ *
+ * Construit son fixture `.merise.json` en JSON brut plutôt qu'en import{ant}
+ * les fabriques de `src/core` : ce fichier est type-vérifié par
+ * `tsconfig.node.json` (résolution `nodenext`, sans alias `@/`), incompatible
+ * avec la résolution « bundler » utilisée par `src/**` — voir
+ * tsconfig.node.json / tsconfig.app.json.
  */
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
-import { createProject } from '../src/core/project/types';
-import { serializeProject } from '../src/core/serialization/file-format';
-import { largeModel } from '../src/tests/fixtures/models';
-import type { DiagramNode } from '../src/core/diagram/types';
 
 function buildLargeProjectFile(): string {
-  const model = largeModel({ entityCount: 100, associationCount: 150, attributesPerEntity: 5 });
-  const project = createProject({ name: 'Grand modele' });
-  project.conceptualModel = model;
-
-  const nodes: DiagramNode[] = [];
+  const entityCount = 100;
+  const associationCount = 150;
+  const attributesPerEntity = 5;
   const cols = 16;
+  const now = new Date().toISOString();
+
+  const entities = Array.from({ length: entityCount }, (_, index) => {
+    const idAttribute = {
+      id: crypto.randomUUID(),
+      name: 'id',
+      dataType: { kind: 'integer' },
+      required: true,
+      unique: false,
+    };
+    const attributes: unknown[] = [idAttribute];
+    for (let a = 0; a < attributesPerEntity; a += 1) {
+      attributes.push({
+        id: crypto.randomUUID(),
+        name: `attribut_${a}`,
+        dataType: { kind: 'varchar', length: 100 },
+        required: false,
+        unique: false,
+      });
+    }
+    return {
+      id: crypto.randomUUID(),
+      name: `ENTITE_${index}`,
+      attributes,
+      identifiers: [{ id: crypto.randomUUID(), attributeIds: [idAttribute.id], primary: true }],
+    };
+  });
+
+  const associations = Array.from({ length: associationCount }, (_, index) => {
+    const from = entities[index % entityCount]!;
+    const to = entities[(index + 1) % entityCount]!;
+    return {
+      id: crypto.randomUUID(),
+      name: `ASSOCIATION_${index}`,
+      attributes: [],
+      participations: [
+        { id: crypto.randomUUID(), entityId: from.id, cardinality: { min: 0, max: 'N' } },
+        { id: crypto.randomUUID(), entityId: to.id, cardinality: { min: 1, max: 1 } },
+      ],
+    };
+  });
+
+  const nodes: unknown[] = [];
   let index = 0;
-  for (const entity of model.entities) {
+  for (const entity of entities) {
     nodes.push({
       id: `n-e-${index}`,
       modelId: entity.id,
@@ -31,10 +75,11 @@ function buildLargeProjectFile(): string {
       position: { x: (index % cols) * 260 + 40, y: Math.floor(index / cols) * 220 + 100 },
       width: 200,
       height: 160,
+      locked: false,
     });
     index += 1;
   }
-  for (const association of model.associations) {
+  for (const association of associations) {
     nodes.push({
       id: `n-a-${index}`,
       modelId: association.id,
@@ -42,14 +87,31 @@ function buildLargeProjectFile(): string {
       position: { x: (index % cols) * 260 + 40, y: Math.floor(index / cols) * 220 + 100 },
       width: 160,
       height: 60,
+      locked: false,
     });
     index += 1;
   }
-  project.diagram.nodes = nodes;
-  project.diagram.viewport = { x: 0, y: 0, zoom: 0.5 };
+
+  const file = {
+    formatVersion: 3,
+    project: {
+      id: crypto.randomUUID(),
+      name: 'Grand modele',
+      createdAt: now,
+      updatedAt: now,
+    },
+    conceptualModel: { entities, associations },
+    diagram: { nodes, viewport: { x: 0, y: 0, zoom: 0.5 }, comments: [] },
+    settings: {
+      sqlDialect: 'postgresql',
+      namingConvention: 'snake_case',
+      gridEnabled: true,
+      snapToGrid: true,
+    },
+  };
 
   const filePath = path.join(os.tmpdir(), `modrise-large-model-${Date.now()}.merise.json`);
-  fs.writeFileSync(filePath, serializeProject(project));
+  fs.writeFileSync(filePath, JSON.stringify(file, null, 2));
   return filePath;
 }
 
