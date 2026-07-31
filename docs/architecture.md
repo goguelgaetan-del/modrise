@@ -22,17 +22,20 @@ src/
 │   ├── conceptual-model/   # Entity, Attribute, Identifier, Association,
 │   │                       # Participation, Cardinality + schémas Zod,
 │   │                       # fabriques et opérations pures
-│   ├── diagram/            # DiagramModel : nœuds (positions), viewport,
-│   │                       # commentaires (v0.4) ; geometry.ts (centre/bord
-│   │                       # d'un nœud) et bounds.ts (rectangle englobant)
+│   ├── diagram/            # DiagramModel : nœuds (positions, verrouillage
+│   │                       # v0.5), viewport, commentaires (v0.4) ;
+│   │                       # geometry.ts (centre/bord d'un nœud), bounds.ts
+│   │                       # (rectangle englobant), align.ts (alignement/
+│   │                       # distribution purs, v0.5)
 │   ├── project/            # ModriseProject, ProjectSettings, fabrique
 │   ├── validation/         # validateConceptualModel + codes de règles
 │   ├── logical-model/      # LogicalModel (tables, colonnes, FK, contraintes)
 │   ├── transformations/    # transformToLogicalModel : entités, 1,N, 1,1,
 │   │                       # N,N/n-aire, nommage déterministe (voir
 │   │                       # docs/logical-transformation.md)
-│   ├── sql/                # interface SqlDialect (dialect.ts) + registre
-│   │   │                   # (registry.ts)
+│   ├── sql/                # interface SqlDialect (dialect.ts) + registre à
+│   │   │                   # chargement dynamique (registry.ts,
+│   │   │                   # dialect-labels.ts, v0.5)
 │   │   ├── shared/         # moteur de génération mutualisé : validation,
 │   │   │                   # registre de contraintes, échappement générique,
 │   │   │                   # assemblage du script (generate-script.ts)
@@ -53,7 +56,8 @@ src/
 ├── stores/                 # Zustand + Immer
 │   ├── project-store.ts    # identité du projet, modèle conceptuel, paramètres
 │   ├── diagram-store.ts    # positions, viewport, commentaires, sélection
-│   │                       # (sélection non persistée)
+│   │                       # (sélection non persistée), verrouillage de
+│   │                       # nœuds (v0.5 — `moveNode` ignore un nœud verrouillé)
 │   ├── history-store.ts    # annuler/rétablir (v0.4, voir
 │   │                       # docs/editor-history.md)
 │   ├── clipboard-store.ts  # presse-papiers interne (v0.4, voir
@@ -69,20 +73,30 @@ src/
 │   ├── diagram/            # canvas React Flow, EntityNode, AssociationNode,
 │   │                       # CommentNode, ParticipationEdge, adaptateurs,
 │   │                       # menu contextuel, raccourcis clavier, suppression
-│   │                       # protégée (simple ou groupée), export/
+│   │                       # protégée (simple ou groupée), export/,
+│   │                       # OnboardingHelp (v0.5) ; layout/ : auto-layout.ts
+│   │                       # (dagre, chargé dynamiquement) et
+│   │                       # alignment-actions.ts (v0.5)
 │   ├── history/            # withHistory, useFieldHistory (v0.4, voir
 │   │                       # docs/editor-history.md)
 │   ├── clipboard/          # logique pure de copier/coller/dupliquer (v0.4,
 │   │                       # voir docs/clipboard.md)
-│   ├── entities/           # inspecteur d'entité
+│   ├── entities/           # inspecteur d'entité, IdentifiersEditor (v0.5,
+│   │                       # voir docs/identifiers.md)
 │   ├── associations/       # inspecteur d'association
-│   ├── validation/         # panneau de validation, ancrage des problèmes
+│   ├── validation/         # panneau de validation, ancrage des problèmes,
+│   │                       # navigation F8/Maj+F8 (v0.5)
 │   ├── logical-model/      # useLogicalModel (hook dérivé mémoïsé), panneau MLD
 │   ├── sql-preview/        # useSqlGeneration, panneau SQL (sélecteur de
 │   │                       # dialecte, aperçu, copier, télécharger)
 │   └── projects/           # import / export de fichiers, nouveau projet
+├── lib/                    # use-media-query.ts (points de rupture
+│                           # responsive, v0.5, voir docs/responsive-layout.md)
 ├── components/
-│   ├── layout/             # TopBar, SidebarLeft, InspectorPanel, BottomPanel
+│   ├── layout/             # TopBar, SidebarLeft, InspectorPanel, BottomPanel,
+│   │                       # StatusBar (v0.5), InspectorDrawer et
+│   │                       # NarrowScreenNotice (tablette, v0.5) — panneaux
+│   │                       # redimensionnables via react-resizable-panels
 │   ├── common/             # éditeurs partagés, notifications
 │   └── ui/                 # composants shadcn/ui générés
 └── app/                    # App, providers (React Flow, tooltips, thème)

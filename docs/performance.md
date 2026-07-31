@@ -55,6 +55,11 @@ Chunk initial (`dist/assets/index-*.js`), avant/après cette tâche :
   v0.5 tâche précédente) : 896,31 kB / 275,88 kB gzip.
 - **Après** (dialectes + panneaux MLD/SQL + export PNG différés) :
   849,63 kB / 261,95 kB gzip.
+- **Fin v0.5** (après la barre de statut, l'aide de premier lancement et le
+  reste des tâches v0.5, sans nouveau code-splitting depuis) :
+  855,69 kB / 263,50 kB gzip — légère hausse attendue, portée par les
+  fonctionnalités ajoutées (barre de statut, aide de premier lancement),
+  pas une régression du découpage lui-même.
 
 Une partie de la réduction du chunk principal correspond à une extraction
 automatique de `project-store.ts` par Rollup dans son propre fichier
