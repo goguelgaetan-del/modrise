@@ -48,10 +48,12 @@ export function toReactFlowNodes(
 ): ModriseNode[] {
   const selected = new Set(selectedNodeIds);
   const commentById = new Map(comments.map((comment) => [comment.id, comment]));
+  const entityById = new Map(model.entities.map((entity) => [entity.id, entity]));
+  const associationById = new Map(model.associations.map((association) => [association.id, association]));
   const nodes: ModriseNode[] = [];
   for (const diagramNode of diagramNodes) {
     if (diagramNode.nodeType === 'entity') {
-      const entity = model.entities.find((e) => e.id === diagramNode.modelId);
+      const entity = entityById.get(diagramNode.modelId);
       if (!entity) continue;
       nodes.push({
         id: diagramNode.id,
@@ -62,7 +64,7 @@ export function toReactFlowNodes(
         data: { entity, hasErrors: modelIdsWithErrors.has(entity.id), locked: diagramNode.locked ?? false },
       });
     } else if (diagramNode.nodeType === 'association') {
-      const association = model.associations.find((a) => a.id === diagramNode.modelId);
+      const association = associationById.get(diagramNode.modelId);
       if (!association) continue;
       nodes.push({
         id: diagramNode.id,

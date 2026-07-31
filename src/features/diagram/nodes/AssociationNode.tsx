@@ -10,10 +10,19 @@ import { cn } from '@/lib/utils';
 import type { AssociationNodeData } from '../adapters/to-react-flow';
 import { NodeHandles } from './NodeHandles';
 
-export const AssociationNode = memo(function AssociationNode({
-  data,
-  selected,
-}: NodeProps<Node<AssociationNodeData, 'association'>>) {
+type AssociationNodeProps = NodeProps<Node<AssociationNodeData, 'association'>>;
+
+/** Voir le commentaire équivalent dans `EntityNode.tsx`. */
+function arePropsEqual(prev: AssociationNodeProps, next: AssociationNodeProps): boolean {
+  return (
+    prev.selected === next.selected &&
+    prev.data.association === next.data.association &&
+    prev.data.hasErrors === next.data.hasErrors &&
+    prev.data.locked === next.data.locked
+  );
+}
+
+export const AssociationNode = memo(function AssociationNode({ data, selected }: AssociationNodeProps) {
   const { association, hasErrors, locked } = data;
   return (
     <div
@@ -47,4 +56,4 @@ export const AssociationNode = memo(function AssociationNode({
       )}
     </div>
   );
-});
+}, arePropsEqual);

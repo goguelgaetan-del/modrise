@@ -65,3 +65,57 @@ réorganisation en fichiers séparés. Le gain honnête et réellement différé
 tient aux chunks listés ci-dessus : environ 25 kB non compressés (~10 kB
 gzip) de code SQL/MLD/export qui ne sont désormais téléchargés que si
 l'utilisateur ouvre effectivement ces fonctionnalités pendant sa session.
+
+## Grands modèles (~100 entités, ~150 associations, 250 nœuds)
+
+Vérification non chronométrée scientifiquement, mais un contrôle explicite
+de blocages évidents sur un modèle nettement au-dessus des projets réels
+attendus. Fixture : `src/tests/fixtures/models.ts` (`largeModel()`),
+utilisée à la fois par `e2e/large-model-performance.spec.ts` (parcours
+navigateur complet) et `src/tests/fixtures/large-model-performance.test.ts`
+(mesure du **cœur métier** seul, sans React).
+
+**Moteur métier (validation, MCD → MLD, génération SQL) : aucun problème.**
+Chacune des trois opérations s'exécute en ~5-10 ms sur ce modèle (mesuré
+directement, pas seulement asserté sous un budget) — pas de dégradation
+quadratique perceptible à cette échelle.
+
+**Deux inefficacités réelles trouvées côté rendu, corrigées dans cette
+tâche :**
+
+- `toReactFlowNodes`/`toReactFlowEdges` (`src/features/diagram/adapters/to-react-flow.ts`)
+  cherchaient l'entité/association correspondant à chaque nœud de diagramme
+  via `Array.find` sur `model.entities`/`model.associations` — une boucle
+  O(n²) à chaque recalcul (recalcul déclenché à *chaque* changement de
+  position pendant un glisser-déposer). Remplacé par des `Map` construites
+  une fois par appel.
+- `InspectorPanel` s'abonnait à l'intégralité de `state.nodes` du store de
+  diagramme pour retrouver le seul nœud sélectionné, ce qui le faisait se
+  re-rendre (identifiants alternatifs compris) à **chaque** déplacement de
+  **n'importe quel** nœud du diagramme, sélectionné ou non. Remplacé par
+  deux sélecteurs Zustand ciblés sur le type et l'id-modèle du nœud
+  sélectionné (des primitives stables tant que la sélection elle-même ne
+  change pas), qui ne redéclenchent un rendu que si l'élément réellement
+  affiché par l'inspecteur change.
+
+**Limite résiduelle, non résolue ici :** glisser-déposer un nœud sur ce
+modèle à 250 nœuds reste perceptiblement plus lent qu'un modèle vide (de
+l'ordre de la seconde pour quelques pas de déplacement, contre quelques
+dizaines de millisecondes à vide, mesuré via Playwright). Les deux
+correctifs ci-dessus n'ont réduit ce coût que marginalement ; un profilage
+CPU sommaire montre du temps passé dans le rendu React Flow lui-même
+(mesures de dimensions, reconstruction du tableau d'arêtes complet à
+chaque pas de déplacement) plutôt que dans le code de Modrise. Une
+optimisation plus profonde (ne recalculer que les arêtes touchant le nœud
+déplacé, découpler la position affichée pendant le glisser de l'écriture
+immédiate dans le store) est un candidat naturel pour une prochaine passe
+dédiée, mais dépasse le cadre d'un contrôle de non-régression. Aucun
+blocage bloquant l'usage n'a été observé (pas de gel, pas de timeout) —
+seulement une latence perceptible sur cette taille de modèle largement
+supérieure aux projets réels visés par l'outil.
+
+**Autres parcours vérifiés sans anomalie** sur ce modèle : import du
+fichier, changement d'onglet Validation/MLD/SQL, organisation automatique
+(dagre, ~1,2 s pour 250 nœuds), sauvegarde locale, export SVG — tous sous
+la seconde à quelques secondes, sans blocage prolongé ni ré-exécution
+visible en boucle.

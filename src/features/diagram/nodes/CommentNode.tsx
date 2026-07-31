@@ -12,10 +12,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import type { CommentNodeData } from '../adapters/to-react-flow';
 
-export const CommentNode = memo(function CommentNode({
-  data,
-  selected,
-}: NodeProps<Node<CommentNodeData, 'comment'>>) {
+type CommentNodeProps = NodeProps<Node<CommentNodeData, 'comment'>>;
+
+/** Voir le commentaire équivalent dans `EntityNode.tsx`. */
+function arePropsEqual(prev: CommentNodeProps, next: CommentNodeProps): boolean {
+  return (
+    prev.selected === next.selected &&
+    prev.data.comment === next.data.comment &&
+    prev.data.locked === next.data.locked
+  );
+}
+
+export const CommentNode = memo(function CommentNode({ data, selected }: CommentNodeProps) {
   const { comment, locked } = data;
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(comment.text);
@@ -69,4 +77,4 @@ export const CommentNode = memo(function CommentNode({
       )}
     </div>
   );
-});
+}, arePropsEqual);

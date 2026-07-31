@@ -13,10 +13,29 @@ import { cn } from '@/lib/utils';
 import type { EntityNodeData } from '../adapters/to-react-flow';
 import { NodeHandles } from './NodeHandles';
 
-export const EntityNode = memo(function EntityNode({
-  data,
-  selected,
-}: NodeProps<Node<EntityNodeData, 'entity'>>) {
+type EntityNodeProps = NodeProps<Node<EntityNodeData, 'entity'>>;
+
+/**
+ * `toReactFlowNodes` reconstruit un tout nouveau tableau de nœuds (et donc
+ * un nouvel objet `data` par nœud) à chaque changement du modèle — y
+ * compris pour les nœuds dont l'entité n'a pas changé. Sans comparateur
+ * personnalisé, la comparaison par défaut de `memo` (référentielle et
+ * superficielle sur `data`) considérerait donc TOUS les nœuds comme modifiés
+ * à chaque frappe, même sur un modèle avec une seule entité éditée parmi
+ * une centaine — un re-rendu inutile à grande échelle (v0.5, voir
+ * docs/performance.md). On compare directement les valeurs qui affectent
+ * réellement le rendu.
+ */
+function arePropsEqual(prev: EntityNodeProps, next: EntityNodeProps): boolean {
+  return (
+    prev.selected === next.selected &&
+    prev.data.entity === next.data.entity &&
+    prev.data.hasErrors === next.data.hasErrors &&
+    prev.data.locked === next.data.locked
+  );
+}
+
+export const EntityNode = memo(function EntityNode({ data, selected }: EntityNodeProps) {
   const { entity, hasErrors, locked } = data;
   return (
     <div
@@ -83,4 +102,4 @@ export const EntityNode = memo(function EntityNode({
       </ul>
     </div>
   );
-});
+}, arePropsEqual);

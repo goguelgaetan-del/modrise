@@ -30,18 +30,31 @@ interface InspectorPanelProps {
 
 export function InspectorPanel({ onRequestDeleteSelection }: InspectorPanelProps) {
   const selectedNodeIds = useDiagramStore((state) => state.selectedNodeIds);
-  const nodes = useDiagramStore((state) => state.nodes);
+  // Sélecteurs ciblés sur le type/id-modèle du nœud sélectionné (des
+  // primitives stables tant que la sélection ne change pas) plutôt qu'un
+  // abonnement à l'intégralité de `state.nodes` : sur un grand diagramme,
+  // ce dernier changerait de référence — et re-rendrait tout l'inspecteur,
+  // identifiants alternatifs compris — à chaque déplacement de n'importe
+  // quel nœud, y compris ceux non sélectionnés (v0.5, voir docs/performance.md).
+  const selectedNodeType = useDiagramStore((state) =>
+    selectedNodeIds.length === 1
+      ? state.nodes.find((node) => node.id === selectedNodeIds[0])?.nodeType
+      : undefined,
+  );
+  const selectedModelId = useDiagramStore((state) =>
+    selectedNodeIds.length === 1
+      ? state.nodes.find((node) => node.id === selectedNodeIds[0])?.modelId
+      : undefined,
+  );
   const conceptualModel = useProjectStore((state) => state.conceptualModel);
 
-  const selectedNode =
-    selectedNodeIds.length === 1 ? nodes.find((node) => node.id === selectedNodeIds[0]) : undefined;
   const entity =
-    selectedNode?.nodeType === 'entity'
-      ? conceptualModel.entities.find((e) => e.id === selectedNode.modelId)
+    selectedNodeType === 'entity'
+      ? conceptualModel.entities.find((e) => e.id === selectedModelId)
       : undefined;
   const association =
-    selectedNode?.nodeType === 'association'
-      ? conceptualModel.associations.find((a) => a.id === selectedNode.modelId)
+    selectedNodeType === 'association'
+      ? conceptualModel.associations.find((a) => a.id === selectedModelId)
       : undefined;
 
   return (
