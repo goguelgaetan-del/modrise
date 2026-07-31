@@ -5,15 +5,18 @@
  */
 import { useMemo, useState } from 'react';
 import { useReactFlow } from '@xyflow/react';
-import { AlertTriangle, CircleCheck, Info, OctagonX } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronUp, CircleCheck, Info, OctagonX } from 'lucide-react';
 import type { ValidationIssue, ValidationSeverity } from '@/core/validation/types';
 import { useDiagramStore } from '@/stores/diagram-store';
 import { useProjectStore } from '@/stores/project-store';
+import { useUiStore } from '@/stores/ui-store';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { resolveIssueAnchor } from '../issue-anchors';
+import { resolveNextIssueId } from '../issue-navigation';
 import { useValidation } from '../use-validation';
 
 const SEVERITY_ICONS: Record<ValidationSeverity, typeof Info> = {
@@ -27,6 +30,8 @@ export function ValidationPanel() {
   const [showErrors, setShowErrors] = useState(true);
   const [showWarnings, setShowWarnings] = useState(true);
   const { fitView } = useReactFlow();
+  const focusedIssueId = useUiStore((state) => state.focusedIssueId);
+  const setFocusedIssueId = useUiStore((state) => state.setFocusedIssueId);
 
   const visibleIssues = useMemo(
     () =>
@@ -40,6 +45,7 @@ export function ValidationPanel() {
   );
 
   const focusIssue = (issue: ValidationIssue) => {
+    setFocusedIssueId(issue.id);
     const { conceptualModel } = useProjectStore.getState();
     const anchor = resolveIssueAnchor(conceptualModel, issue);
     if (!anchor.ownerId) return;
@@ -48,6 +54,12 @@ export function ValidationPanel() {
     if (!node) return;
     diagramStore.setSelection([node.id]);
     void fitView({ nodes: [{ id: node.id }], padding: 1.2, duration: 300, maxZoom: 1.2 });
+  };
+
+  const focusNext = (offset: 1 | -1) => {
+    const nextId = resolveNextIssueId(visibleIssues, focusedIssueId, offset);
+    const issue = visibleIssues.find((i) => i.id === nextId);
+    if (issue) focusIssue(issue);
   };
 
   return (
@@ -76,6 +88,36 @@ export function ValidationPanel() {
             Génération SQL bloquée
           </Badge>
         )}
+        {visibleIssues.length > 0 && (
+          <div className={cn('flex items-center gap-0.5', errorCount === 0 && 'ml-auto')}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  aria-label="Problème précédent (Maj+F8)"
+                  onClick={() => focusNext(-1)}
+                >
+                  <ChevronUp aria-hidden />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Problème précédent (Maj+F8)</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  aria-label="Problème suivant (F8)"
+                  onClick={() => focusNext(1)}
+                >
+                  <ChevronDown aria-hidden />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Problème suivant (F8)</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
       </div>
 
       <ScrollArea className="min-h-0 flex-1">
@@ -93,7 +135,11 @@ export function ValidationPanel() {
                   <button
                     type="button"
                     onClick={() => focusIssue(issue)}
-                    className="flex w-full items-start gap-2 px-3 py-1.5 text-left text-sm hover:bg-accent focus-visible:bg-accent focus-visible:outline-none"
+                    data-testid={`validation-issue-${issue.id}`}
+                    className={cn(
+                      'flex w-full items-start gap-2 px-3 py-1.5 text-left text-sm hover:bg-accent focus-visible:bg-accent focus-visible:outline-none',
+                      issue.id === focusedIssueId && 'bg-accent',
+                    )}
                   >
                     <Icon
                       aria-label={issue.severity === 'error' ? 'Erreur' : 'Avertissement'}

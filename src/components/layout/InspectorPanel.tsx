@@ -47,7 +47,7 @@ export function InspectorPanel({ onRequestDeleteSelection }: InspectorPanelProps
   return (
     <aside
       aria-label="Inspecteur de propriétés"
-      className="w-80 shrink-0 border-l"
+      className="h-full border-l"
       data-testid="inspector"
     >
       <ScrollArea className="h-full">
