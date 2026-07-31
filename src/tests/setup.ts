@@ -25,3 +25,27 @@ if (!Element.prototype.releasePointerCapture) {
 if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {};
 }
+
+// jsdom n'implémente pas `window.matchMedia`, utilisé par les points de
+// rupture responsive (`src/lib/use-media-query.ts`) : un faux minimal, dont
+// les tests peuvent piloter `matches` et déclencher `change` eux-mêmes.
+if (!window.matchMedia) {
+  window.matchMedia = (query: string) => {
+    const listeners = new Set<(event: MediaQueryListEvent) => void>();
+    const mql = {
+      media: query,
+      matches: false,
+      onchange: null,
+      addEventListener: (_: 'change', listener: (event: MediaQueryListEvent) => void) => {
+        listeners.add(listener);
+      },
+      removeEventListener: (_: 'change', listener: (event: MediaQueryListEvent) => void) => {
+        listeners.delete(listener);
+      },
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => true,
+    } as unknown as MediaQueryList;
+    return mql;
+  };
+}
