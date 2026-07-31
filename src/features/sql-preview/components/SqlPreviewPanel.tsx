@@ -5,9 +5,10 @@
  * téléchargement. Le dialecte est persisté dans les paramètres du projet.
  */
 import { useState } from 'react';
-import { Copy, Download, OctagonX } from 'lucide-react';
+import { Copy, Download, Loader2, OctagonX } from 'lucide-react';
 import { DEFAULT_SQL_GENERATION_OPTIONS, SQL_DIALECT_IDS } from '@/core/sql/dialect';
 import type { SqlDialectId, SqlGenerationOptions } from '@/core/sql/dialect';
+import { SQL_DIALECT_LABELS } from '@/core/sql/dialect-labels';
 import { useProjectStore } from '@/stores/project-store';
 import { useUiStore } from '@/stores/ui-store';
 import { Button } from '@/components/ui/button';
@@ -24,12 +25,6 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { downloadSqlFile } from '../sql-export';
 import { useSqlGeneration } from '../use-sql-generation';
-
-const DIALECT_LABELS: Record<SqlDialectId, string> = {
-  postgresql: 'PostgreSQL',
-  mysql: 'MySQL / MariaDB',
-  sqlite: 'SQLite',
-};
 
 const DIALECT_NOTES: Record<SqlDialectId, string> = {
   postgresql:
@@ -62,7 +57,7 @@ export function SqlPreviewPanel() {
       <SelectContent>
         {SQL_DIALECT_IDS.map((id) => (
           <SelectItem key={id} value={id}>
-            {DIALECT_LABELS[id]}
+            {SQL_DIALECT_LABELS[id]}
           </SelectItem>
         ))}
       </SelectContent>
@@ -86,13 +81,26 @@ export function SqlPreviewPanel() {
     );
   }
 
-  if (state.status === 'unsupported-dialect') {
+  if (state.status === 'loading-dialect') {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center text-sm text-muted-foreground">
         {dialectSelector}
-        <p>
-          Fonctionnalité prévue dans une prochaine version — le dialecte « {state.dialectId} » n'est
-          pas encore disponible.
+        <p className="mt-2 flex items-center gap-1.5" data-testid="sql-dialect-loading">
+          <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
+          Chargement du générateur {SQL_DIALECT_LABELS[dialectId]}…
+        </p>
+      </div>
+    );
+  }
+
+  if (state.status === 'dialect-load-error') {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center text-sm text-muted-foreground">
+        {dialectSelector}
+        <OctagonX aria-hidden className="h-5 w-5 text-destructive" />
+        <p data-testid="sql-dialect-error">
+          Impossible de charger le générateur {SQL_DIALECT_LABELS[state.dialectId]}. Vérifiez votre
+          connexion et réessayez.
         </p>
       </div>
     );

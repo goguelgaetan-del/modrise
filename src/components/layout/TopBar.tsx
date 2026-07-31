@@ -24,7 +24,6 @@ import { saveNow, withAutosaveSuspended } from '@/persistence/autosave';
 import { downloadProjectFile, readProjectFile } from '@/features/projects/import-export';
 import { loadNewProject as loadNewProjectShared } from '@/features/projects/new-project';
 import { downloadDiagramSvg } from '@/features/diagram/export/export-svg';
-import { downloadDiagramPng } from '@/features/diagram/export/export-png';
 import { computeAutoLayout } from '@/features/diagram/layout/auto-layout';
 import type { LayoutDirection } from '@/features/diagram/layout/auto-layout';
 import { undo, redo, withHistory } from '@/features/history/with-history';
@@ -96,6 +95,9 @@ export function TopBar() {
 
   const onExportPng = async () => {
     try {
+      // Chargé à la demande : rarement utilisé dans une session, inutile
+      // dans le chunk initial (v0.5, voir docs/performance.md).
+      const { downloadDiagramPng } = await import('@/features/diagram/export/export-png');
       await downloadDiagramPng(projectName);
     } catch (error) {
       notify('error', error instanceof Error ? error.message : 'Export PNG impossible.');
