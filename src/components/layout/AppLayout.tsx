@@ -26,6 +26,7 @@ import { BottomPanel } from './BottomPanel';
 import { InspectorPanel } from './InspectorPanel';
 import { InspectorDrawer } from './InspectorDrawer';
 import { SidebarLeft } from './SidebarLeft';
+import { StatusBar } from './StatusBar';
 import { TopBar } from './TopBar';
 import { NarrowScreenNotice } from './NarrowScreenNotice';
 
@@ -127,6 +128,8 @@ export function AppLayout() {
           <InspectorDrawer onRequestDeleteSelection={deletion.requestDeleteSelection} />
         </>
       )}
+
+      <StatusBar />
 
       <DeleteConfirmationDialog deletion={deletion} />
       <Notifications />
