@@ -61,7 +61,7 @@ test('le déplacement sur un grand diagramme reste proche du coût sur un petit'
   const smallMs = await dragFirstNode(page, DRAG_STEPS);
 
   const ratio = largeMs / Math.max(smallMs, 1);
-  // eslint-disable-next-line no-console -- diagnostic utile en cas d'échec
+  // Diagnostic imprimé par le rapporteur : utile quand le rapport dérive.
   console.log(
     `glisser-déposer : 250 nœuds ${largeMs} ms, 3 nœuds ${smallMs} ms, rapport ${ratio.toFixed(1)}×`,
   );
