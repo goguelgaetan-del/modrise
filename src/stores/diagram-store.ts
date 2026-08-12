@@ -38,6 +38,12 @@ interface DiagramState {
   addComment: (text: string, position: { x: number; y: number }) => string;
   updateCommentText: (commentId: string, text: string) => void;
   moveNode: (nodeId: string, position: { x: number; y: number }) => void;
+  /**
+   * Applique en une seule écriture les positions finales d'un déplacement
+   * (voir `src/core/diagram/drag-transaction.ts`) : un glisser-déposer, même
+   * portant sur vingt nœuds, ne produit qu'une notification du store.
+   */
+  moveNodes: (positions: Record<string, { x: number; y: number }>) => void;
   setNodeSize: (nodeId: string, width: number, height: number) => void;
   setNodeLocked: (nodeId: string, locked: boolean) => void;
   /** Supprime des nœuds (et, le cas échéant, les commentaires associés) par id d'objet représenté. */
@@ -98,6 +104,19 @@ export const useDiagramStore = create<DiagramState>()(
           // de l'appel (glisser-déposer, auto-layout, alignement…) — appliqué
           // ici, à la source, plutôt que dans chaque appelant.
           if (node && !node.locked) node.position = position;
+        });
+      },
+
+      moveNodes: (positions) => {
+        const ids = Object.keys(positions);
+        if (ids.length === 0) return;
+        set((state) => {
+          for (const node of state.nodes) {
+            const position = positions[node.id];
+            // Même garde que `moveNode` : un nœud verrouillé n'est jamais
+            // déplacé, quelle que soit l'origine de l'appel.
+            if (position && !node.locked) node.position = position;
+          }
         });
       },
 

@@ -5,8 +5,17 @@
  * vérité ; les nœuds/arêtes React Flow en sont dérivés à chaque rendu et
  * les interactions (déplacement, sélection, connexion) sont retraduites en
  * actions de store par les gestionnaires ci-dessous.
+ *
+ * Exception assumée : le glisser-déposer. Écrire la position dans le store à
+ * chaque événement reconstruisait l'intégralité des nœuds et des arêtes
+ * plusieurs dizaines de fois par seconde (~162 ms par événement sur un
+ * diagramme de 250 nœuds). Le déplacement en cours vit donc dans une
+ * transaction transitoire (`src/core/diagram/drag-transaction.ts`) rendue par
+ * React Flow lui-même, et n'est écrit dans le store qu'au relâchement — une
+ * écriture, une entrée d'historique, une sauvegarde (v0.5.1, voir
+ * docs/canvas-performance.md).
  */
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Background,
   BackgroundVariant,
@@ -24,7 +33,19 @@ import { useHistoryStore } from '@/stores/history-store';
 import type { EditorSnapshot } from '@/stores/history-store';
 import { captureEditorSnapshot, withHistory } from '@/features/history/with-history';
 import { useValidation } from '@/features/validation/use-validation';
-import { toReactFlowEdges, toReactFlowNodes, type ModriseNode } from '../adapters/to-react-flow';
+import {
+  applyDragPreviewToEdges,
+  applyDragPreviewToNodes,
+  toReactFlowEdges,
+  toReactFlowNodes,
+  type ModriseNode,
+} from '../adapters/to-react-flow';
+import {
+  commitDrag,
+  startDrag,
+  updateDragPreview,
+  type DragTransaction,
+} from '@/core/diagram/drag-transaction';
 import { AssociationNode } from '../nodes/AssociationNode';
 import { EntityNode } from '../nodes/EntityNode';
 import { CommentNode } from '../nodes/CommentNode';
@@ -49,7 +70,7 @@ export function DiagramCanvas({ onRequestDeleteSelection }: DiagramCanvasProps) 
   const comments = useDiagramStore((state) => state.comments);
   const viewport = useDiagramStore((state) => state.viewport);
   const selectedNodeIds = useDiagramStore((state) => state.selectedNodeIds);
-  const moveNode = useDiagramStore((state) => state.moveNode);
+  const moveNodes = useDiagramStore((state) => state.moveNodes);
   const setNodeSize = useDiagramStore((state) => state.setNodeSize);
   const setSelection = useDiagramStore((state) => state.setSelection);
   const setViewport = useDiagramStore((state) => state.setViewport);
@@ -65,29 +86,79 @@ export function DiagramCanvas({ onRequestDeleteSelection }: DiagramCanvasProps) 
   const contextMenu = useContextMenu();
 
   const dragSnapshotRef = useRef<EditorSnapshot | null>(null);
+  // La transaction est un objet *muté sur place* à chaque événement de
+  // déplacement (aucun rendu), mais conservé dans l'état React : le rendu a
+  // ainsi le droit de lire les positions courantes, et seuls l'ouverture et
+  // la clôture de la transaction provoquent un rendu — deux par déplacement,
+  // au lieu d'un par pixel.
+  const [drag, setDrag] = useState<DragTransaction | null>(null);
+  // Miroir non réactif de `drag`, lu par le gestionnaire d'événements : un
+  // `setState` n'est pas visible avant le rendu suivant, or plusieurs lots de
+  // changements peuvent arriver entre-temps.
+  const dragRef = useRef<DragTransaction | null>(null);
 
-  const nodes = useMemo(
+  const baseNodes = useMemo(
     () => toReactFlowNodes(diagramNodes, conceptualModel, comments, selectedNodeIds, errorOwnerIds),
     [diagramNodes, conceptualModel, comments, selectedNodeIds, errorOwnerIds],
   );
-  const edges = useMemo(
+  const baseEdges = useMemo(
     () => toReactFlowEdges(diagramNodes, conceptualModel, errorParticipationIds),
     [diagramNodes, conceptualModel, errorParticipationIds],
   );
 
+  // Pendant un déplacement, le store n'est pas écrit : React Flow rend
+  // lui-même le mouvement. La superposition ci-dessous ne sert donc qu'aux
+  // rendus déclenchés par une *autre* source pendant le glissement (une
+  // sélection, une validation…), pour qu'ils n'annulent pas le mouvement en
+  // cours. Sans déplacement actif, les tableaux d'origine sont retournés à
+  // l'identique — aucune allocation, aucun rendu supplémentaire.
+  const dragPositions = drag?.currentPositions ?? null;
+  const nodes = applyDragPreviewToNodes(baseNodes, dragPositions);
+  const edges = applyDragPreviewToEdges(baseEdges, diagramNodes, dragPositions);
+
+  /**
+   * Clôt la transaction en cours : une seule écriture du store, une seule
+   * entrée d'historique, puis une seule sauvegarde (déclenchée par
+   * l'abonnement de l'autosauvegarde à cette écriture).
+   */
+  const commitDragTransaction = useCallback((transaction: DragTransaction | null) => {
+    setDrag(null);
+    const before = dragSnapshotRef.current;
+    dragSnapshotRef.current = null;
+    if (!transaction || !before) return;
+
+    const moved = commitDrag(transaction);
+    const movedCount = Object.keys(moved).length;
+    if (movedCount === 0) return;
+
+    moveNodes(moved);
+    const after = captureEditorSnapshot();
+    if (before.diagramNodes === after.diagramNodes) return;
+    const label = movedCount > 1 ? `Déplacer ${movedCount} éléments` : 'Déplacer un élément';
+    useHistoryStore.getState().pushEntry({ label, before, after });
+  }, [moveNodes]);
+
   const onNodesChange = useCallback(
     (changes: NodeChange<ModriseNode>[]) => {
       let selection: string[] | null = null;
-      let movedCount = 0;
       let dragEnded = false;
+      let transaction = dragRef.current;
 
       for (const change of changes) {
         if (change.type === 'position' && change.position) {
-          if (!dragSnapshotRef.current) {
+          if (!transaction) {
+            // Première position reçue : on capture l'état d'avant une seule
+            // fois, pour l'unique entrée d'historique du déplacement.
             dragSnapshotRef.current = captureEditorSnapshot();
+            transaction = startDrag(
+              useDiagramStore.getState().nodes,
+              changes.flatMap((c) => (c.type === 'position' ? [c.id] : [])),
+              performance.now(),
+            );
+            dragRef.current = transaction;
+            setDrag(transaction);
           }
-          moveNode(change.id, change.position);
-          movedCount += 1;
+          updateDragPreview(transaction, change.id, change.position);
           if (change.dragging === false) dragEnded = true;
         } else if (change.type === 'dimensions' && change.dimensions) {
           setNodeSize(change.id, change.dimensions.width, change.dimensions.height);
@@ -103,20 +174,14 @@ export function DiagramCanvas({ onRequestDeleteSelection }: DiagramCanvasProps) 
         setSelection(selection);
       }
 
-      // Un déplacement continu (glisser-déposer) ne doit produire qu'une
-      // seule entrée d'historique, enregistrée au relâchement du nœud —
-      // jamais à chaque pixel intermédiaire.
-      if (dragEnded && dragSnapshotRef.current) {
-        const before = dragSnapshotRef.current;
-        dragSnapshotRef.current = null;
-        const after = captureEditorSnapshot();
-        if (before.diagramNodes !== after.diagramNodes) {
-          const label = movedCount > 1 ? `Déplacer ${movedCount} éléments` : 'Déplacer un élément';
-          useHistoryStore.getState().pushEntry({ label, before, after });
-        }
+      // Le store, l'historique et la sauvegarde n'entrent en jeu qu'au
+      // relâchement — jamais à chaque pixel intermédiaire.
+      if (dragEnded) {
+        dragRef.current = null;
+        commitDragTransaction(transaction);
       }
     },
-    [moveNode, setNodeSize, setSelection],
+    [commitDragTransaction, setNodeSize, setSelection],
   );
 
   /**
