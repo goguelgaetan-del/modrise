@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { DiagramNode } from './types';
-import { commitDrag, hasMoved, startDrag, updateDragPreview } from './drag-transaction';
+import {
+  commitDrag,
+  hasMoved,
+  isDragTransactionStale,
+  startDrag,
+  updateDragPreview,
+} from './drag-transaction';
 
 function node(id: string, x: number, y: number, locked = false): DiagramNode {
   return { id, modelId: `m-${id}`, nodeType: 'entity', position: { x, y }, locked };
@@ -68,5 +74,38 @@ describe('transaction de déplacement', () => {
     const moved = commitDrag(transaction);
     expect(moved.b!.x - moved.a!.x).toBe(100);
     expect(moved.b!.y - moved.a!.y).toBe(0);
+  });
+});
+
+describe('péremption d’une transaction', () => {
+  it('reste valide tant que le diagramme n’a pas changé', () => {
+    const transaction = startDrag(nodes, ['a', 'b'], 0);
+    updateDragPreview(transaction, 'a', { x: 50, y: 50 });
+    expect(isDragTransactionStale(transaction, nodes)).toBe(false);
+  });
+
+  it('est périmée si un nœud déplacé a été supprimé', () => {
+    const transaction = startDrag(nodes, ['a', 'b'], 0);
+    const remaining = nodes.filter((candidate) => candidate.id !== 'a');
+    expect(isDragTransactionStale(transaction, remaining)).toBe(true);
+  });
+
+  it('est périmée si le diagramme entier a été remplacé', () => {
+    const transaction = startDrag(nodes, ['a'], 0);
+    // Un import ou l'ouverture d'un autre projet : plus aucun id commun.
+    expect(isDragTransactionStale(transaction, [node('autre', 0, 0)])).toBe(true);
+  });
+
+  it('est périmée si une action extérieure a déplacé le nœud', () => {
+    const transaction = startDrag(nodes, ['a'], 0);
+    // Annulation au clavier pendant que le bouton est enfoncé.
+    const moved = [node('a', 500, 500), node('b', 100, 0)];
+    expect(isDragTransactionStale(transaction, moved)).toBe(true);
+  });
+
+  it('ignore les nœuds étrangers à la transaction', () => {
+    const transaction = startDrag(nodes, ['a'], 0);
+    const others = [node('a', 0, 0), node('b', 999, 999)];
+    expect(isDragTransactionStale(transaction, others)).toBe(false);
   });
 });

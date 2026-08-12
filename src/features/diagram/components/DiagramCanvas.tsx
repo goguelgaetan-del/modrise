@@ -42,6 +42,7 @@ import {
 } from '../adapters/to-react-flow';
 import {
   commitDrag,
+  isDragTransactionStale,
   startDrag,
   updateDragPreview,
   type DragTransaction,
@@ -126,6 +127,10 @@ export function DiagramCanvas({ onRequestDeleteSelection }: DiagramCanvasProps) 
     const before = dragSnapshotRef.current;
     dragSnapshotRef.current = null;
     if (!transaction || !before) return;
+
+    // Le diagramme a-t-il changé sous la transaction (import, suppression,
+    // annulation pendant que le bouton était enfoncé) ? Si oui, l'oublier.
+    if (isDragTransactionStale(transaction, useDiagramStore.getState().nodes)) return;
 
     const moved = commitDrag(transaction);
     const movedCount = Object.keys(moved).length;

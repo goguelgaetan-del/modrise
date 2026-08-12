@@ -82,6 +82,29 @@ export function hasMoved(transaction: DragTransaction): boolean {
 }
 
 /**
+ * Vrai si le diagramme a changé sous la transaction : un nœud engagé a
+ * disparu, ou sa position dans le modèle n'est plus celle relevée au
+ * démarrage.
+ *
+ * Le cas se produit quand une action extérieure survient pendant qu'un
+ * bouton est enfoncé — ouverture d'un projet, import, suppression du nœud
+ * déplacé, annulation au clavier. La transaction repose alors sur un état
+ * qui n'existe plus : écrire ses positions replacerait des nœuds effacés ou
+ * défairait l'action extérieure, et l'instantané « avant » de l'historique
+ * décrirait un diagramme différent. Une transaction périmée est donc
+ * abandonnée, sans rien écrire.
+ */
+export function isDragTransactionStale(
+  transaction: DragTransaction,
+  nodes: readonly DiagramNode[],
+): boolean {
+  const positionById = new Map(nodes.map((node) => [node.id, node.position]));
+  return transaction.nodeIds.some(
+    (id) => !samePosition(positionById.get(id), transaction.initialPositions[id]),
+  );
+}
+
+/**
  * Positions à écrire dans le store au relâchement : uniquement les nœuds
  * qui ont réellement bougé (un simple clic n'écrit donc rien).
  *

@@ -68,6 +68,7 @@ const { useDiagramStore } = await import('@/stores/diagram-store');
 const { useProjectStore } = await import('@/stores/project-store');
 const { useHistoryStore } = await import('@/stores/history-store');
 const { largeDiagram, largeModel } = await import('@/tests/fixtures/models');
+const { redo, undo } = await import('@/features/history/with-history');
 
 class ResizeObserverStub {
   observe() {}
@@ -227,6 +228,95 @@ describe('contrat de performance du glisser-déposer', () => {
 
     expect(storeWrites).toBe(0);
     expect(useHistoryStore.getState().past).toHaveLength(0);
+  });
+
+  it('déplace un commentaire comme un nœud métier, sans recalcul métier', () => {
+    const comment = nodeIds.find((id) => id.startsWith('node-comment-'))!;
+    for (let frame = 1; frame <= 30; frame += 1) {
+      emit(positionChanges([comment], frame, true));
+    }
+    expect(storeWrites).toBe(0);
+    emit(positionChanges([comment], 30, false));
+
+    expect(storeWrites).toBe(1);
+    expect(useHistoryStore.getState().past).toHaveLength(1);
+    expect(useDiagramStore.getState().nodes.find((n) => n.id === comment)!.position).toEqual({
+      x: 120,
+      y: 60,
+    });
+    // Un commentaire n'appartient pas au modèle conceptuel non plus.
+    expect(validateSpy).not.toHaveBeenCalled();
+    expect(transformSpy).not.toHaveBeenCalled();
+  });
+
+  it('restaure la position initiale après annulation, puis la rétablit', () => {
+    const dragged = nodeIds[0]!;
+    const initial = useDiagramStore.getState().nodes.find((n) => n.id === dragged)!.position;
+
+    for (let frame = 1; frame <= 10; frame += 1) {
+      emit(positionChanges([dragged], frame, true));
+    }
+    emit(positionChanges([dragged], 10, false));
+    const moved = useDiagramStore.getState().nodes.find((n) => n.id === dragged)!.position;
+    expect(moved).not.toEqual(initial);
+
+    undo();
+    expect(useDiagramStore.getState().nodes.find((n) => n.id === dragged)!.position).toEqual(
+      initial,
+    );
+
+    redo();
+    expect(useDiagramStore.getState().nodes.find((n) => n.id === dragged)!.position).toEqual(moved);
+  });
+
+  it('abandonne la branche de rétablissement si un déplacement suit une annulation', () => {
+    const dragged = nodeIds[0]!;
+    emit(positionChanges([dragged], 1, true));
+    emit(positionChanges([dragged], 5, false));
+    undo();
+    expect(useHistoryStore.getState().future).toHaveLength(1);
+
+    // Un nouveau déplacement après annulation coupe la branche rétablissable.
+    emit(positionChanges([dragged], 1, true));
+    emit(positionChanges([dragged], 9, false));
+    expect(useHistoryStore.getState().future).toHaveLength(0);
+    expect(useHistoryStore.getState().past).toHaveLength(1);
+  });
+
+  it('abandonne la transaction si le nœud déplacé est supprimé en cours de route', () => {
+    const dragged = nodeIds[0]!;
+    const modelId = useDiagramStore.getState().nodes.find((n) => n.id === dragged)!.modelId;
+
+    for (let frame = 1; frame <= 10; frame += 1) {
+      emit(positionChanges([dragged], frame, true));
+    }
+    useDiagramStore.getState().removeNodesForModel([modelId]);
+    const writesAfterDeletion = storeWrites;
+
+    emit(positionChanges([dragged], 10, false));
+
+    // Le nœud n'est pas ressuscité, et aucune entrée d'historique ne décrit
+    // un diagramme qui n'existe plus.
+    expect(useDiagramStore.getState().nodes.some((n) => n.id === dragged)).toBe(false);
+    expect(storeWrites).toBe(writesAfterDeletion);
+    expect(useHistoryStore.getState().past).toHaveLength(0);
+  });
+
+  it('abandonne la transaction si un autre projet est ouvert en cours de route', () => {
+    const dragged = nodeIds[0]!;
+    for (let frame = 1; frame <= 10; frame += 1) {
+      emit(positionChanges([dragged], frame, true));
+    }
+
+    const other = largeDiagram(largeModel({ entityCount: 3, associationCount: 2 }));
+    useDiagramStore.getState().loadDiagram(other);
+    const writesAfterImport = storeWrites;
+
+    emit(positionChanges([dragged], 10, false));
+
+    expect(storeWrites).toBe(writesAfterImport);
+    expect(useHistoryStore.getState().past).toHaveLength(0);
+    expect(useDiagramStore.getState().nodes).toHaveLength(other.nodes.length);
   });
 
   it('préserve l’identité des nœuds non déplacés passés à React Flow', () => {

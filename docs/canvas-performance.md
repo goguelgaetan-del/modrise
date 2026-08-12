@@ -110,6 +110,15 @@ Il n'existe pas d'opération d'annulation symétrique : le store n'ayant
 jamais été écrit pendant le déplacement, abandonner une transaction se
 réduit à l'oublier — les positions du `DiagramModel` font alors foi.
 
+`isDragTransactionStale(transaction, nodes)` protège le cas où une action
+extérieure survient pendant qu'un bouton est enfoncé : ouverture d'un
+projet, import, suppression du nœud déplacé, annulation au clavier. La
+transaction repose alors sur un état qui n'existe plus, et elle est
+abandonnée sans rien écrire. Sans cette garde, le commit empilait une
+entrée d'historique dont l'instantané « avant » décrivait le diagramme
+précédent — annuler juste après une suppression aurait ressuscité les
+nœuds effacés.
+
 ### L'aperçu — `applyDragPreviewToNodes` / `applyDragPreviewToEdges`
 
 Les positions en cours sont superposées aux nœuds dérivés du store sans
@@ -208,14 +217,19 @@ absolue.
 
 - `src/core/diagram/drag-transaction.test.ts` — la transaction elle-même :
   exclusion des nœuds verrouillés, accumulation de 100 positions,
-  distinction clic / déplacement, positions relatives d'un groupe.
+  distinction clic / déplacement, positions relatives d'un groupe,
+  péremption (nœud supprimé, projet remplacé, nœud déplacé de l'extérieur).
 - `src/features/diagram/adapters/to-react-flow.test.ts` — la préservation
   d'identité : tableau d'origine retourné quand rien ne change, `data`
   d'un nœud déplacé non reconstruit, arêtes non touchées conservées.
 - `src/features/diagram/components/DiagramCanvas.drag.test.tsx` — le
   contrat de comptage, React Flow remplacé par un espion : 100 événements
   → 0 écriture du store, 0 validation, 0 transformation MLD ; puis au
-  relâchement 1 écriture et 1 entrée d'historique.
+  relâchement 1 écriture et 1 entrée d'historique. Y sont aussi couverts le
+  déplacement d'un commentaire, la restauration par annulation/
+  rétablissement, la coupure de la branche rétablissable, et l'abandon
+  d'une transaction dont le nœud est supprimé ou le projet remplacé en
+  cours de route.
 - `src/persistence/autosave.test.ts` — 100 événements → 0 appel à
   `saveProject` ; commit → exactement 1, portant la position finale.
 - `src/stores/diagram-store.test.ts` — `moveNodes` ne notifie qu'une fois
