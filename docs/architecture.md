@@ -24,6 +24,9 @@ src/
 │   │                       # fabriques et opérations pures
 │   ├── diagram/            # DiagramModel : nœuds (positions, verrouillage
 │   │                       # v0.5), viewport, commentaires (v0.4) ;
+│   │                       # drag-transaction.ts : état transitoire d'un
+│   │                       # déplacement en cours (v0.5.1, voir
+│   │                       # docs/canvas-performance.md) ;
 │   │                       # geometry.ts (centre/bord d'un nœud), bounds.ts
 │   │                       # (rectangle englobant), align.ts (alignement/
 │   │                       # distribution purs, v0.5)
@@ -57,7 +60,10 @@ src/
 │   ├── project-store.ts    # identité du projet, modèle conceptuel, paramètres
 │   ├── diagram-store.ts    # positions, viewport, commentaires, sélection
 │   │                       # (sélection non persistée), verrouillage de
-│   │                       # nœuds (v0.5 — `moveNode` ignore un nœud verrouillé)
+│   │                       # nœuds (v0.5 — `moveNode` ignore un nœud
+│   │                       # verrouillé) ; `moveNodes` applique un
+│   │                       # déplacement groupé en une seule notification
+│   │                       # (v0.5.1)
 │   ├── history-store.ts    # annuler/rétablir (v0.4, voir
 │   │                       # docs/editor-history.md)
 │   ├── clipboard-store.ts  # presse-papiers interne (v0.4, voir

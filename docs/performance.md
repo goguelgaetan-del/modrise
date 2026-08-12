@@ -103,21 +103,23 @@ tâche :**
   change pas), qui ne redéclenchent un rendu que si l'élément réellement
   affiché par l'inspecteur change.
 
-**Limite résiduelle, non résolue ici :** glisser-déposer un nœud sur ce
-modèle à 250 nœuds reste perceptiblement plus lent qu'un modèle vide (de
-l'ordre de la seconde pour quelques pas de déplacement, contre quelques
-dizaines de millisecondes à vide, mesuré via Playwright). Les deux
-correctifs ci-dessus n'ont réduit ce coût que marginalement ; un profilage
-CPU sommaire montre du temps passé dans le rendu React Flow lui-même
-(mesures de dimensions, reconstruction du tableau d'arêtes complet à
-chaque pas de déplacement) plutôt que dans le code de Modrise. Une
-optimisation plus profonde (ne recalculer que les arêtes touchant le nœud
-déplacé, découpler la position affichée pendant le glisser de l'écriture
-immédiate dans le store) est un candidat naturel pour une prochaine passe
-dédiée, mais dépasse le cadre d'un contrôle de non-régression. Aucun
-blocage bloquant l'usage n'a été observé (pas de gel, pas de timeout) —
-seulement une latence perceptible sur cette taille de modèle largement
-supérieure aux projets réels visés par l'outil.
+**Limite résiduelle à la fin de la v0.5, résolue depuis :** glisser-déposer
+un nœud sur ce modèle à 250 nœuds restait perceptiblement plus lent qu'un
+modèle vide — 162 ms par événement de déplacement, contre 19 ms sur un
+diagramme à 3 nœuds, soit un rapport de 8,7×. Le profilage a confirmé que
+le temps était passé dans le rendu React Flow lui-même, pas dans le code de
+Modrise (la chaîne store → adaptateurs coûtait 0,20 ms par événement, soit
+0,1 % du total).
+
+**La passe dédiée annoncée ici a été menée en v0.5.1** : la position
+affichée pendant un glissement est désormais découplée de l'écriture dans
+le store, et seules les arêtes touchant un nœud déplacé sont réexaminées.
+Résultat mesuré : **24,7 ms par événement, rapport ramené à 1,3× — soit une
+réduction de 85 %** de la durée totale d'un scénario de déplacement. Le
+détail des mesures, des causes et de l'architecture retenue est dans
+[canvas-performance.md](canvas-performance.md). Coût en poids de bundle :
++1,69 kB sur le chunk principal (855,69 → 857,38 kB ; 263,50 → 264,05 kB
+gzip), sans dépendance ajoutée.
 
 **Autres parcours vérifiés sans anomalie** sur ce modèle : import du
 fichier, changement d'onglet Validation/MLD/SQL, organisation automatique

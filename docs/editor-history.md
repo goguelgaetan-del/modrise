@@ -67,6 +67,16 @@ pendant un glissement, avec `dragging: true`, puis une dernière fois avec
 l'entrée qu'au relâchement — un glissement, même long, ne produit donc
 qu'une seule entrée d'historique.
 
+Depuis la v0.5.1, les positions intermédiaires ne transitent même plus par
+le store de diagramme : elles s'accumulent dans une transaction transitoire
+et ne sont écrites qu'une fois, au relâchement, par `moveNodes`
+(voir [canvas-performance.md](canvas-performance.md)). L'instantané
+« après » est donc pris une seule fois, sur un état déjà final — et si le
+geste n'a rien déplacé (simple clic, ou sélection ne contenant que des
+nœuds verrouillés), les deux instantanés sont identiques et aucune entrée
+n'est empilée. Le libellé est « Déplacer un élément » ou
+« Déplacer N éléments » selon le nombre de nœuds réellement déplacés.
+
 ## Limites et comportement
 
 - Plafond de **100 entrées** (`MAX_HISTORY_ENTRIES`) : au-delà, les plus

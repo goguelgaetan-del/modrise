@@ -91,18 +91,65 @@
       Zustand resserrés, vérifiés sur un modèle de ~100 entités / 150
       associations
 
+## v0.5.1 — Performance du canvas (terminé)
+
+- [x] Déplacement des nœuds via une transaction transitoire : le store
+      n'est plus écrit à chaque image, une seule écriture au relâchement —
+      162 ms → 25 ms par événement sur 250 nœuds (−85 %), voir
+      [canvas-performance.md](canvas-performance.md)
+- [x] Une seule entrée d'historique et une seule autosauvegarde par
+      déplacement, quelle que soit sa durée
+- [x] Recalcul géométrique limité aux arêtes touchant un nœud déplacé,
+      identité référentielle préservée pour tout le reste
+- [x] Tests de comptage (écritures, validations, transformations MLD,
+      sauvegardes) et garde-fou de performance en rapport plutôt qu'en
+      millisecondes
+- [x] Fixture déterministe de grand modèle partagée entre tests unitaires
+      et Playwright
+
 ## v1.0 — Stabilisation
 
-- [ ] Documentation complète
-- [ ] Couverture de tests renforcée
-- [ ] Exemples supplémentaires (e-commerce, bibliothèque…)
-- [ ] Déploiement public (hébergement statique)
-- [ ] Engagement de compatibilité durable du format de fichier
+### Bloquants
+
+Ces points conditionnent la publication d'une v1.0 : ils touchent la
+confiance qu'un utilisateur peut placer dans l'outil pour un travail réel.
+
+- [x] Performance sur les grands modèles (livré en v0.5.1)
+- [ ] Engagement de compatibilité durable du format `.merise.json` :
+      politique de version documentée, migrations garanties dans les deux
+      sens de version majeure, test de non-régression par version passée
+      (v1 → v2 → v3)
+- [ ] Robustesse de l'import/export : fichier tronqué, JSON invalide,
+      version future inconnue, très gros fichier — message clair dans
+      chaque cas, jamais d'écran blanc
+- [ ] Gestion des erreurs non rattrapées : périmètre d'erreur React
+      (message compréhensible, rechargement possible, export du projet
+      local avant de perdre l'état), sans masquer l'erreur silencieusement
+- [ ] Documentation utilisateur (pas seulement de développement) :
+      prise en main, notions Merise couvertes, limites connues
+- [ ] Exemples supplémentaires livrés (e-commerce, bibliothèque…) en plus
+      de la gestion d'hôtel
+- [ ] Déploiement public (hébergement statique) et release GitHub associée
+- [ ] Politique de versionnage annoncée (que signifie une version majeure,
+      mineure, corrective pour l'application *et* pour le format)
+
+### Non bloquants
+
+Souhaitables, mais une v1.0 utile et honnête peut sortir sans eux.
+
+- [ ] Héritage Merise (spécialisation/généralisation)
+- [ ] Rétro-ingénierie SQL / import depuis une base existante
+- [ ] Application desktop Tauri
+- [ ] Partage de projet, collaboration, historique cloud
+- [ ] MCT (modèle conceptuel des traitements), diagrammes de flux
+- [ ] Coloration syntaxique du SQL
+- [ ] Extension Visual Studio Code
+
+Le déroulé opérationnel de la sortie est détaillé dans
+[release-checklist.md](release-checklist.md).
 
 ## Versions futures
 
-- Application desktop Tauri
-- Rétro-ingénierie SQL / import depuis une base existante
-- Héritage Merise, MCT, diagrammes de flux
-- Partage de projet, collaboration, historique cloud
-- Extension Visual Studio Code
+Reprises de la liste « non bloquants » ci-dessus : application desktop
+Tauri, rétro-ingénierie SQL, héritage Merise, MCT et diagrammes de flux,
+collaboration, extension Visual Studio Code.

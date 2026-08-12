@@ -42,6 +42,7 @@ Modrise permet de concevoir des modèles conceptuels de données (MCD), de gén�
 - **Navigation clavier entre problèmes de validation** (F8 / Maj+F8) : sélectionne, recentre et ouvre l'inspecteur sur le problème suivant/précédent.
 - **Barre de statut** compacte (entités, associations, commentaires, erreurs, dialecte SQL, zoom, statut d'enregistrement) et **aide de premier lancement** (4 étapes, refermable définitivement).
 - **Chargement différé** des dialectes SQL, des panneaux MLD/SQL, de l'export PNG et de la bibliothèque d'auto-layout (code-splitting) pour un chargement initial plus léger. Voir [docs/performance.md](docs/performance.md).
+- **Déplacement fluide sur les grands diagrammes** : pendant un glisser-déposer, les positions vivent dans un état transitoire et ne sont écrites qu'au relâchement — une seule modification du projet, une seule entrée d'historique, une seule sauvegarde, aucun recalcul du MLD ni du SQL. Sur un modèle de 100 entités / 150 associations (250 nœuds), le coût d'un événement de déplacement passe de 162 ms à 25 ms (−85 %). Voir [docs/canvas-performance.md](docs/canvas-performance.md).
 
 ## Fonctionnalités prévues
 
