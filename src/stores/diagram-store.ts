@@ -39,6 +39,7 @@ interface DiagramState {
   updateCommentText: (commentId: string, text: string) => void;
   moveNode: (nodeId: string, position: { x: number; y: number }) => void;
   setNodeSize: (nodeId: string, width: number, height: number) => void;
+  setNodeLocked: (nodeId: string, locked: boolean) => void;
   /** Supprime des nœuds (et, le cas échéant, les commentaires associés) par id d'objet représenté. */
   removeNodesForModel: (modelIds: string[]) => void;
   setViewport: (viewport: DiagramViewport) => void;
@@ -93,7 +94,10 @@ export const useDiagramStore = create<DiagramState>()(
       moveNode: (nodeId, position) => {
         set((state) => {
           const node = state.nodes.find((n) => n.id === nodeId);
-          if (node) node.position = position;
+          // Un nœud verrouillé n'est jamais déplacé, quelle que soit l'origine
+          // de l'appel (glisser-déposer, auto-layout, alignement…) — appliqué
+          // ici, à la source, plutôt que dans chaque appelant.
+          if (node && !node.locked) node.position = position;
         });
       },
 
@@ -104,6 +108,13 @@ export const useDiagramStore = create<DiagramState>()(
             node.width = width;
             node.height = height;
           }
+        });
+      },
+
+      setNodeLocked: (nodeId, locked) => {
+        set((state) => {
+          const node = state.nodes.find((n) => n.id === nodeId);
+          if (node) node.locked = locked;
         });
       },
 

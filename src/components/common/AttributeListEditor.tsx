@@ -1,11 +1,14 @@
 /**
  * Éditeur de la liste d'attributs d'une entité ou d'une association :
- * nom, type, obligatoire, unique, ordre, suppression — et appartenance à
- * l'identifiant primaire lorsque le porteur est une entité.
+ * nom, type, obligatoire, unique, ordre, suppression. L'appartenance à un
+ * identifiant (primaire ou alternatif) se gère désormais depuis la section
+ * « Identifiants » (`IdentifiersEditor`) — cette liste se contente d'un
+ * indicateur en lecture seule pour ne pas disperser cette gestion dans des
+ * cases à cocher au milieu des attributs.
  */
-import { ArrowDown, ArrowUp, KeyRound, Plus, Trash2 } from 'lucide-react';
+import { Asterisk, ArrowDown, ArrowUp, Fingerprint, KeyRound, Plus, Trash2 } from 'lucide-react';
 import type { Attribute, Entity } from '@/core/conceptual-model/types';
-import { isPrimaryAttribute } from '@/core/conceptual-model/operations';
+import { isAlternateIdentifierAttribute, isPrimaryAttribute } from '@/core/conceptual-model/operations';
 import { useProjectStore } from '@/stores/project-store';
 import { withHistory } from '@/features/history/with-history';
 import { useFieldHistory } from '@/features/history/use-field-history';
@@ -14,7 +17,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
 import { DataTypeEditor } from './DataTypeEditor';
 
 interface AttributeListEditorProps {
@@ -76,36 +78,52 @@ function AttributeRow({ ownerId, attribute, entity, primary, isFirst, isLast }: 
   const updateAttribute = useProjectStore((state) => state.updateAttribute);
   const removeAttribute = useProjectStore((state) => state.removeAttribute);
   const moveAttribute = useProjectStore((state) => state.moveAttribute);
-  const togglePrimary = useProjectStore((state) => state.toggleAttributeInPrimaryIdentifier);
   const nameHistory = useFieldHistory("Modifier le nom de l'attribut");
   const dataTypeHistory = useFieldHistory("Modifier le type de la donnée");
+  const alternate = entity ? isAlternateIdentifierAttribute(entity, attribute.id) : false;
 
   return (
     <li className="space-y-2 rounded-md border p-2">
       <div className="flex items-center gap-1.5">
         {entity && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="icon-sm"
-                variant={primary ? 'default' : 'ghost'}
-                aria-pressed={primary}
-                aria-label={
-                  primary
-                    ? `Retirer « ${attribute.name} » de l'identifiant primaire`
-                    : `Ajouter « ${attribute.name} » à l'identifiant primaire`
-                }
-                onClick={() =>
-                  withHistory("Modifier l'identifiant primaire", () =>
-                    togglePrimary(entity.id, attribute.id),
-                  )
-                }
-              >
-                <KeyRound aria-hidden className={cn(!primary && 'text-muted-foreground')} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Identifiant primaire</TooltipContent>
-          </Tooltip>
+          <span className="w-4 shrink-0">
+            {primary ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <KeyRound
+                      aria-label="Identifiant primaire"
+                      className="h-4 w-4 text-amber-600 dark:text-amber-400"
+                    />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>Identifiant primaire — gérer dans « Identifiants »</TooltipContent>
+              </Tooltip>
+            ) : alternate ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Fingerprint
+                      aria-label="Identifiant alternatif"
+                      className="h-4 w-4 text-indigo-600 dark:text-indigo-400"
+                    />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>Identifiant alternatif — gérer dans « Identifiants »</TooltipContent>
+              </Tooltip>
+            ) : (
+              attribute.unique && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <Asterisk aria-label="Attribut unique" className="h-4 w-4 text-muted-foreground" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>Attribut unique</TooltipContent>
+                </Tooltip>
+              )
+            )}
+          </span>
         )}
         <Input
           value={attribute.name}

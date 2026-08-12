@@ -15,7 +15,7 @@ export interface ProjectMigration {
 }
 
 interface LegacyDiagram {
-  diagram?: { comments?: unknown };
+  diagram?: { comments?: unknown; nodes?: unknown };
 }
 
 /**
@@ -38,8 +38,35 @@ const addDiagramComments: ProjectMigration = {
   },
 };
 
+/**
+ * v2 → v3 : introduction du verrouillage de nœuds (`DiagramNode.locked`).
+ * Un fichier v2 n'a jamais ce champ sur ses nœuds : on l'ajoute à `false`
+ * (aucun nœud verrouillé), sans toucher au reste.
+ */
+const addNodeLocked: ProjectMigration = {
+  fromVersion: 2,
+  toVersion: 3,
+  migrate: (data) => {
+    const project = data as LegacyDiagram;
+    if (!project.diagram || !Array.isArray(project.diagram.nodes)) {
+      return data;
+    }
+    return {
+      ...(data as object),
+      diagram: {
+        ...project.diagram,
+        nodes: project.diagram.nodes.map((node) =>
+          typeof node === 'object' && node !== null && !('locked' in node)
+            ? { ...node, locked: false }
+            : node,
+        ),
+      },
+    };
+  },
+};
+
 /** Registre ordonné des migrations. */
-export const MIGRATIONS: readonly ProjectMigration[] = [addDiagramComments];
+export const MIGRATIONS: readonly ProjectMigration[] = [addDiagramComments, addNodeLocked];
 
 export class MigrationError extends Error {}
 

@@ -67,6 +67,55 @@ describe('validateConceptualModel — erreurs', () => {
     expect(codesOf(model)).toContain(CODES.identifierUnknownAttribute);
   });
 
+  it('signale un attribut référencé deux fois dans le même identifiant', () => {
+    const model = emptyModel();
+    const entity = createEntity({ name: 'CLIENT' });
+    const attributeId = entity.attributes[0]!.id;
+    entity.identifiers[0]!.attributeIds = [attributeId, attributeId];
+    model.entities.push(entity);
+    expect(codesOf(model)).toContain(CODES.duplicateAttributeInIdentifier);
+  });
+
+  it('signale deux identifiants portant sur exactement les mêmes attributs', () => {
+    const model = emptyModel();
+    const entity = createEntity({ name: 'CLIENT' });
+    const attributeId = entity.attributes[0]!.id;
+    entity.identifiers.push({ id: 'i2', attributeIds: [attributeId], primary: false });
+    model.entities.push(entity);
+    const issues = validateConceptualModel(model).filter(
+      (issue) => issue.code === CODES.duplicateIdentifier,
+    );
+    expect(issues).toHaveLength(2);
+  });
+
+  it("signale deux identifiants alternatifs portant le même nom", () => {
+    const model = emptyModel();
+    const entity = createEntity({ name: 'CLIENT' });
+    const email = createAttribute({ name: 'email' });
+    const telephone = createAttribute({ name: 'telephone' });
+    entity.attributes.push(email, telephone);
+    entity.identifiers.push(
+      { id: 'i2', name: 'UQ_CLIENT', attributeIds: [email.id], primary: false },
+      { id: 'i3', name: 'uq_client', attributeIds: [telephone.id], primary: false },
+    );
+    model.entities.push(entity);
+    const issues = validateConceptualModel(model).filter(
+      (issue) => issue.code === CODES.duplicateIdentifierName,
+    );
+    expect(issues).toHaveLength(2);
+  });
+
+  it("n'exige pas de nom pour un identifiant alternatif", () => {
+    const model = emptyModel();
+    const entity = createEntity({ name: 'CLIENT' });
+    const email = createAttribute({ name: 'email' });
+    entity.attributes.push(email);
+    entity.identifiers.push({ id: 'i2', attributeIds: [email.id], primary: false });
+    model.entities.push(entity);
+    const errors = validateConceptualModel(model).filter((issue) => issue.severity === 'error');
+    expect(errors).toEqual([]);
+  });
+
   it('accepte un identifiant composé valide', () => {
     const model = emptyModel();
     const entity = createEntity({ name: 'LIGNE_COMMANDE' });

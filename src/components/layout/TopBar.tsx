@@ -2,7 +2,7 @@
  * Barre supérieure : identité, projet, fichiers (nouveau/import/export),
  * sauvegarde, historique (prévu), vue et thème.
  */
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useReactFlow } from '@xyflow/react';
 import {
   Database,
@@ -11,6 +11,7 @@ import {
   Focus,
   FolderOpen,
   Image,
+  LayoutGrid,
   Moon,
   Redo2,
   Save,
@@ -23,8 +24,9 @@ import { saveNow, withAutosaveSuspended } from '@/persistence/autosave';
 import { downloadProjectFile, readProjectFile } from '@/features/projects/import-export';
 import { loadNewProject as loadNewProjectShared } from '@/features/projects/new-project';
 import { downloadDiagramSvg } from '@/features/diagram/export/export-svg';
-import { downloadDiagramPng } from '@/features/diagram/export/export-png';
-import { undo, redo } from '@/features/history/with-history';
+import { computeAutoLayout } from '@/features/diagram/layout/auto-layout';
+import type { LayoutDirection } from '@/features/diagram/layout/auto-layout';
+import { undo, redo, withHistory } from '@/features/history/with-history';
 import { assembleCurrentProject, loadProjectIntoStores } from '@/stores/project-assembly';
 import { useDiagramStore } from '@/stores/diagram-store';
 import { useHistoryStore } from '@/stores/history-store';
@@ -65,6 +67,26 @@ export function TopBar() {
   const zoom = useDiagramStore((state) => state.viewport.zoom);
   const { fitView } = useReactFlow();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isLayingOut, setIsLayingOut] = useState(false);
+
+  const onAutoLayout = async (direction: LayoutDirection) => {
+    setIsLayingOut(true);
+    try {
+      const { nodes, moveNode } = useDiagramStore.getState();
+      const { conceptualModel } = useProjectStore.getState();
+      const positions = await computeAutoLayout(nodes, conceptualModel, direction);
+      withHistory('Organiser automatiquement le diagramme', () => {
+        for (const [nodeId, position] of positions) {
+          moveNode(nodeId, position);
+        }
+      });
+      requestAnimationFrame(() => void fitView({ padding: 0.2, duration: 300 }));
+    } catch {
+      notify('error', "Organisation automatique impossible.");
+    } finally {
+      setIsLayingOut(false);
+    }
+  };
 
   const loadNewProject = async (kind: 'empty' | 'hotel') => {
     await loadNewProjectShared(kind);
@@ -73,6 +95,9 @@ export function TopBar() {
 
   const onExportPng = async () => {
     try {
+      // Chargé à la demande : rarement utilisé dans une session, inutile
+      // dans le chunk initial (v0.5, voir docs/performance.md).
+      const { downloadDiagramPng } = await import('@/features/diagram/export/export-png');
       await downloadDiagramPng(projectName);
     } catch (error) {
       notify('error', error instanceof Error ? error.message : 'Export PNG impossible.');
@@ -232,6 +257,33 @@ export function TopBar() {
           </TooltipContent>
         </Tooltip>
         <Separator orientation="vertical" className="!h-6" />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              size="sm"
+              variant="ghost"
+              aria-label="Organiser automatiquement"
+              disabled={isLayingOut}
+              data-testid="auto-layout-button"
+            >
+              <LayoutGrid aria-hidden />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={() => void onAutoLayout('horizontal')}
+              data-testid="auto-layout-horizontal"
+            >
+              Disposition horizontale
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => void onAutoLayout('vertical')}
+              data-testid="auto-layout-vertical"
+            >
+              Disposition verticale
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button

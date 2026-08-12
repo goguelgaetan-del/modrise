@@ -20,11 +20,14 @@ interface UiState {
   bottomPanelOpen: boolean;
   saveStatus: SaveStatus;
   notifications: UiNotification[];
+  /** Id du problème de validation actuellement ciblé par F8/Shift+F8. */
+  focusedIssueId?: string;
 
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
   setBottomTab: (tab: BottomTab) => void;
   setBottomPanelOpen: (open: boolean) => void;
+  setFocusedIssueId: (id: string | undefined) => void;
   setSaveStatus: (status: SaveStatus) => void;
   notify: (kind: UiNotification['kind'], message: string) => void;
   dismissNotification: (id: number) => void;
@@ -72,6 +75,12 @@ export const useUiStore = create<UiState>()(
     setBottomPanelOpen: (open) => {
       set((state) => {
         state.bottomPanelOpen = open;
+      });
+    },
+
+    setFocusedIssueId: (id) => {
+      set((state) => {
+        state.focusedIssueId = id;
       });
     },
 

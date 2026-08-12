@@ -16,10 +16,18 @@ import {
   createParticipation,
 } from '@/core/conceptual-model/factories';
 import {
+  addAlternateIdentifier,
+  addAttributeToIdentifier,
   associationsReferencingEntity,
+  moveIdentifierAttribute,
+  promoteIdentifierToPrimary,
   removeAttributeFromEntity,
+  removeAttributeFromIdentifier,
+  removeIdentifier,
+  renameIdentifier,
   togglePrimaryAttribute,
 } from '@/core/conceptual-model/operations';
+import type { Identifier } from '@/core/conceptual-model/types';
 import { createId } from '@/core/id';
 import type { ModriseProject, ProjectSettings } from '@/core/project/types';
 import { createProject } from '@/core/project/types';
@@ -61,6 +69,21 @@ interface ProjectState {
   removeAttribute: (ownerId: string, attributeId: string) => void;
   moveAttribute: (ownerId: string, attributeId: string, direction: 'up' | 'down') => void;
   toggleAttributeInPrimaryIdentifier: (entityId: string, attributeId: string) => void;
+
+  /** Crée un identifiant alternatif vide et le retourne. */
+  addAlternateIdentifier: (entityId: string) => Identifier | undefined;
+  renameIdentifier: (entityId: string, identifierId: string, name: string) => void;
+  /** Sans effet sur l'identifiant primaire : promouvoir un autre le rétrograde. */
+  removeIdentifier: (entityId: string, identifierId: string) => void;
+  addAttributeToIdentifier: (entityId: string, identifierId: string, attributeId: string) => void;
+  removeAttributeFromIdentifier: (entityId: string, identifierId: string, attributeId: string) => void;
+  moveIdentifierAttribute: (
+    entityId: string,
+    identifierId: string,
+    attributeId: string,
+    direction: 'up' | 'down',
+  ) => void;
+  promoteIdentifierToPrimary: (entityId: string, identifierId: string) => void;
 
   addAssociation: () => Association;
   updateAssociation: (
@@ -235,6 +258,71 @@ export const useProjectStore = create<ProjectState>()(
           const entity = state.conceptualModel.entities.find((e) => e.id === entityId);
           if (!entity) return;
           togglePrimaryAttribute(entity, attributeId, createId);
+          touch(state);
+        });
+      },
+
+      addAlternateIdentifier: (entityId) => {
+        let created: Identifier | undefined;
+        set((state) => {
+          const entity = state.conceptualModel.entities.find((e) => e.id === entityId);
+          if (!entity) return;
+          created = addAlternateIdentifier(entity, createId);
+          touch(state);
+        });
+        return created;
+      },
+
+      renameIdentifier: (entityId, identifierId, name) => {
+        set((state) => {
+          const entity = state.conceptualModel.entities.find((e) => e.id === entityId);
+          if (!entity) return;
+          renameIdentifier(entity, identifierId, name);
+          touch(state);
+        });
+      },
+
+      removeIdentifier: (entityId, identifierId) => {
+        set((state) => {
+          const entity = state.conceptualModel.entities.find((e) => e.id === entityId);
+          if (!entity) return;
+          removeIdentifier(entity, identifierId);
+          touch(state);
+        });
+      },
+
+      addAttributeToIdentifier: (entityId, identifierId, attributeId) => {
+        set((state) => {
+          const entity = state.conceptualModel.entities.find((e) => e.id === entityId);
+          if (!entity) return;
+          addAttributeToIdentifier(entity, identifierId, attributeId);
+          touch(state);
+        });
+      },
+
+      removeAttributeFromIdentifier: (entityId, identifierId, attributeId) => {
+        set((state) => {
+          const entity = state.conceptualModel.entities.find((e) => e.id === entityId);
+          if (!entity) return;
+          removeAttributeFromIdentifier(entity, identifierId, attributeId);
+          touch(state);
+        });
+      },
+
+      moveIdentifierAttribute: (entityId, identifierId, attributeId, direction) => {
+        set((state) => {
+          const entity = state.conceptualModel.entities.find((e) => e.id === entityId);
+          if (!entity) return;
+          moveIdentifierAttribute(entity, identifierId, attributeId, direction);
+          touch(state);
+        });
+      },
+
+      promoteIdentifierToPrimary: (entityId, identifierId) => {
+        set((state) => {
+          const entity = state.conceptualModel.entities.find((e) => e.id === entityId);
+          if (!entity) return;
+          promoteIdentifierToPrimary(entity, identifierId);
           touch(state);
         });
       },

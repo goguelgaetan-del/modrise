@@ -1,0 +1,34 @@
+version: 1
+
+project:
+  name: modrise
+
+commands:
+  install: pnpm install
+  test: pnpm test
+  lint: pnpm lint
+  build: pnpm build
+
+agents:
+  planner: codex
+  implementer: claude
+  reviewer: codex
+
+git:
+  base_branch: feature/modeling-layout-v05
+  branch_prefix: leadev/
+  use_worktrees: true
+  auto_commit: true
+  auto_push: false
+  auto_merge: false
+
+limits:
+  max_review_cycles: 3
+  max_task_duration_minutes: 90
+  max_diff_lines: 3000
+
+safety:
+  mode: safe
+  protected_paths:
+    - .env
+    - .git

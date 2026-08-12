@@ -97,6 +97,29 @@ describe('transformToLogicalModel — entités', () => {
     expect(table.uniqueConstraints[0]?.sourceIdentifierId).toBe('alt-1');
   });
 
+  it('transforme un identifiant alternatif composé en contrainte unique multi-colonnes, ordre conservé', () => {
+    const conceptual: ConceptualModel = { entities: [], associations: [] };
+    const entity = createEntity({ name: 'RESERVATION' });
+    const chambre = createAttribute({ name: 'chambre', dataType: { kind: 'integer' } });
+    const dateArrivee = createAttribute({ name: 'date_arrivee', dataType: { kind: 'date' } });
+    entity.attributes.push(chambre, dateArrivee);
+    entity.identifiers.push({
+      id: 'alt-composite',
+      name: 'UQ_CHAMBRE_DATE',
+      attributeIds: [chambre.id, dateArrivee.id],
+      primary: false,
+    });
+    conceptual.entities.push(entity);
+    const model = transform(conceptual);
+    const table = findTable(model, 'reservation');
+    const constraint = table.uniqueConstraints.find((uq) => uq.sourceIdentifierId === 'alt-composite');
+    expect(constraint).toBeDefined();
+    const columnNames = constraint!.columnIds.map(
+      (id) => table.columns.find((c) => c.id === id)?.name,
+    );
+    expect(columnNames).toEqual(['chambre', 'date_arrivee']);
+  });
+
   it('transforme un attribut `unique` hors identifiant en contrainte unique', () => {
     const model = transform(createHotelExampleProject().conceptualModel);
     const client = findTable(model, 'client');

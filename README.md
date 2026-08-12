@@ -13,11 +13,11 @@ Modrise permet de concevoir des modèles conceptuels de données (MCD), de gén�
 - Un **format de fichier ouvert et versionné** (`.merise.json`) avec migrations.
 - Un vrai produit logiciel : typé strictement, testé, documenté, évolutif.
 
-## Fonctionnalités disponibles (v0.1 → v0.4)
+## Fonctionnalités disponibles (v0.1 → v0.5)
 
 - Création graphique d'entités et d'associations (React Flow).
 - Attributs typés (integer, bigint, decimal, varchar, text, boolean, date, datetime, uuid) avec obligatoire / unique.
-- Identifiants primaires simples ou composés (icône clé dans le diagramme).
+- **Identifiants alternatifs et composés** : éditeur complet dans l'inspecteur d'entité (créer, renommer, réordonner/retirer des attributs, promouvoir en primaire, supprimer), distinction visuelle icône + libellé entre clé primaire, identifiant alternatif et attribut simplement unique (jamais la seule couleur). Voir [docs/identifiers.md](docs/identifiers.md).
 - Participations créées en traçant un lien entité ↔ association, cardinalités Merise (0,1 / 1,1 / 0,N / 1,N) et rôles.
 - Associations binaires, n-aires et réflexives ; attributs portés par une association.
 - Validation en continu (erreurs et avertissements Merise/SQL) avec sélection et recentrage de l'élément concerné.
@@ -35,10 +35,17 @@ Modrise permet de concevoir des modèles conceptuels de données (MCD), de gén�
 - **Export SVG et PNG** du diagramme entier — le SVG reste réellement vectoriel (généré depuis le modèle, pas une capture d'écran) ; le PNG en est une rastérisation haute résolution. Voir [docs/diagram-export.md](docs/diagram-export.md).
 - **Raccourcis clavier complets** : Ctrl/Cmd+Z / Maj+Z / Y (annuler/rétablir), Ctrl/Cmd+C/V/D/A (presse-papiers, tout sélectionner), Ctrl/Cmd+S/O/N (sauvegarder, importer, nouveau projet), Suppr/Retour, Échap, F (centrer) — tous ignorés dans un champ de saisie.
 - **Garde-fou de fermeture d'onglet** : avertissement uniquement s'il existe de vraies modifications non enregistrées.
+- **Organisation automatique du diagramme** (bouton « Organiser automatiquement », horizontal/vertical) : disposition déterministe via dagre, chargé à la demande, annulable en une seule action. Voir [docs/auto-layout.md](docs/auto-layout.md).
+- **Alignement et distribution** de la sélection multiple (6 alignements, distribution horizontale/verticale à partir de 3 éléments), depuis l'inspecteur.
+- **Verrouillage de nœuds** : un nœud verrouillé reste sélectionnable et éditable, mais n'est jamais déplacé — ni par glisser-déposer, ni par l'organisation automatique.
+- **Panneaux redimensionnables** (bibliothèque, inspecteur, panneau inférieur), tailles persistées localement, réinitialisables par double-clic sur une séparation ; **interface tablette** (< 1200px) avec tiroirs non modaux, et message non bloquant sous 768px. Voir [docs/responsive-layout.md](docs/responsive-layout.md).
+- **Navigation clavier entre problèmes de validation** (F8 / Maj+F8) : sélectionne, recentre et ouvre l'inspecteur sur le problème suivant/précédent.
+- **Barre de statut** compacte (entités, associations, commentaires, erreurs, dialecte SQL, zoom, statut d'enregistrement) et **aide de premier lancement** (4 étapes, refermable définitivement).
+- **Chargement différé** des dialectes SQL, des panneaux MLD/SQL, de l'export PNG et de la bibliothèque d'auto-layout (code-splitting) pour un chargement initial plus léger. Voir [docs/performance.md](docs/performance.md).
 
 ## Fonctionnalités prévues
 
-- Application desktop Tauri, rétro-ingénierie SQL, héritage Merise, MCT, collaboration, panneaux redimensionnables… (voir [docs/roadmap.md](docs/roadmap.md)).
+- Application desktop Tauri, rétro-ingénierie SQL, héritage Merise, MCT, diagrammes de flux, collaboration… (voir [docs/roadmap.md](docs/roadmap.md)).
 
 L'interface annonce explicitement les fonctionnalités non disponibles (« Fonctionnalité prévue dans une prochaine version ») : rien n'est simulé.
 
@@ -63,6 +70,7 @@ pnpm lint         # ESLint
 pnpm typecheck    # vérification TypeScript
 pnpm test         # tests unitaires (Vitest)
 pnpm test:e2e     # tests de bout en bout (Playwright)
+pnpm analyze      # build avec analyse de la taille des chunks (docs/performance.md)
 pnpm format       # formatage Prettier
 ```
 
@@ -88,7 +96,7 @@ Principe central : **le modèle métier est la source de vérité**. React Flow 
 
 ## Format de fichier
 
-Les projets s'exportent en `.merise.json`, format JSON versionné (`formatVersion`, actuellement 2) avec pipeline d'import : lecture sans confiance → migration → validation Zod → chargement. Un fichier v1 (avant les commentaires graphiques du v0.4) s'importe et se migre normalement. Voir [docs/file-format.md](docs/file-format.md). Un exemple complet est fourni dans [examples/gestion-hotel.merise.json](examples/gestion-hotel.merise.json).
+Les projets s'exportent en `.merise.json`, format JSON versionné (`formatVersion`, actuellement 3) avec pipeline d'import : lecture sans confiance → migration → validation Zod → chargement. Un fichier v1 (avant les commentaires graphiques du v0.4) ou v2 (avant le verrouillage de nœuds du v0.5) s'importe et se migre normalement, en chaînant les migrations nécessaires. Voir [docs/file-format.md](docs/file-format.md). Un exemple complet est fourni dans [examples/gestion-hotel.merise.json](examples/gestion-hotel.merise.json).
 
 ## Contribution
 

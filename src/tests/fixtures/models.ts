@@ -197,3 +197,48 @@ export function invalidModel(): ConceptualModel {
     associations: [associationVide],
   };
 }
+
+export interface LargeModelOptions {
+  entityCount?: number;
+  associationCount?: number;
+  attributesPerEntity?: number;
+}
+
+/**
+ * Grand modèle valide et déterministe (mêmes ids/noms à chaque appel), pour
+ * les tests et vérifications de performance sur un modèle de grande taille
+ * (v0.5, voir docs/performance.md) — une centaine d'entités, une
+ * cinquantaine d'associations de plus, plusieurs centaines d'attributs.
+ * Chaque association relie deux entités distinctes choisies de façon
+ * déterministe (pas de dépendance à `Math.random`), avec une cardinalité
+ * 1,N classique — suffisant pour exercer la validation, la transformation
+ * MCD → MLD et la génération SQL sans configuration particulière.
+ */
+export function largeModel(options: LargeModelOptions = {}): ConceptualModel {
+  const entityCount = options.entityCount ?? 100;
+  const associationCount = options.associationCount ?? 150;
+  const attributesPerEntity = options.attributesPerEntity ?? 5;
+
+  const entities = Array.from({ length: entityCount }, (_, index) => {
+    const entity = createEntity({ name: `ENTITE_${index}` });
+    for (let a = 0; a < attributesPerEntity; a += 1) {
+      entity.attributes.push(
+        createAttribute({ name: `attribut_${a}`, dataType: { kind: 'varchar', length: 100 } }),
+      );
+    }
+    return entity;
+  });
+
+  const associations = Array.from({ length: associationCount }, (_, index) => {
+    const from = entities[index % entityCount]!;
+    const to = entities[(index + 1) % entityCount]!;
+    const association = createAssociation({ name: `ASSOCIATION_${index}` });
+    association.participations = [
+      createParticipation({ entityId: from.id, cardinality: { min: 0, max: 'N' } }),
+      createParticipation({ entityId: to.id, cardinality: { min: 1, max: 1 } }),
+    ];
+    return association;
+  });
+
+  return { entities, associations };
+}

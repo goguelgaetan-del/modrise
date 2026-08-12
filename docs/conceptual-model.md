@@ -62,8 +62,9 @@ interface Identifier {
 ```
 
 Une entité valide possède **exactement un identifiant primaire** ; elle peut
-posséder des identifiants alternatifs (futurs `UNIQUE`) et des identifiants
-composés de plusieurs attributs.
+posséder des identifiants alternatifs (contraintes `UNIQUE` en SQL, gérables
+depuis l'inspecteur — voir [identifiers.md](identifiers.md)) et des
+identifiants composés de plusieurs attributs.
 
 ## Association et participation
 

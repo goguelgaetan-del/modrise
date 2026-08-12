@@ -22,7 +22,10 @@ export function SidebarLeft() {
   };
 
   return (
-    <aside aria-label="Bibliothèque d'éléments" className="flex w-44 flex-col gap-1.5 border-r p-2">
+    <aside
+      aria-label="Bibliothèque d'éléments"
+      className="flex h-full flex-col gap-1.5 overflow-y-auto border-r p-2"
+    >
       <h2 className="px-1 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Éléments
       </h2>

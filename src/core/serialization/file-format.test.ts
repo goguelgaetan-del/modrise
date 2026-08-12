@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createHotelExampleProject } from '../examples/hotel';
 import { applyMigrations, MigrationError } from '../migrations';
 import type { ProjectMigration } from '../migrations';
+import { CURRENT_FORMAT_VERSION } from '../project/types';
 import {
   FileFormatError,
   parseProjectFile,
@@ -62,35 +63,59 @@ describe('serializeProject / parseProjectFile', () => {
   });
 });
 
-describe('migration réelle v1 → v2 (commentaires graphiques)', () => {
+describe('migration réelle v1 → v2 → v3 (commentaires graphiques, verrouillage)', () => {
   function v1Payload(): Record<string, unknown> {
     const project = createHotelExampleProject();
     const raw = JSON.parse(serializeProject(project)) as {
       formatVersion: number;
-      diagram: { comments?: unknown };
+      diagram: { comments?: unknown; nodes: Record<string, unknown>[] };
     };
     raw.formatVersion = 1;
     delete raw.diagram.comments;
+    for (const node of raw.diagram.nodes) delete node.locked;
     return raw as Record<string, unknown>;
   }
 
-  it("importe un vrai fichier v1 (sans `diagram.comments`) avec une liste de commentaires vide", () => {
+  function v2Payload(): Record<string, unknown> {
+    const project = createHotelExampleProject();
+    const raw = JSON.parse(serializeProject(project)) as {
+      formatVersion: number;
+      diagram: { nodes: Record<string, unknown>[] };
+    };
+    raw.formatVersion = 2;
+    for (const node of raw.diagram.nodes) delete node.locked;
+    return raw as Record<string, unknown>;
+  }
+
+  it("importe un vrai fichier v1 (sans `diagram.comments` ni `locked`) en chaînant les deux migrations", () => {
     const parsed = parseProjectFile(JSON.stringify(v1Payload()));
-    expect(parsed.formatVersion).toBe(2);
+    expect(parsed.formatVersion).toBe(CURRENT_FORMAT_VERSION);
     expect(parsed.diagram.comments).toEqual([]);
+    expect(parsed.diagram.nodes.every((node) => node.locked === false)).toBe(true);
   });
 
-  it('ne signale aucun avertissement pour une migration v1 → v2 réussie', () => {
+  it("importe un vrai fichier v2 (sans `locked`) avec `locked: false` sur chaque nœud", () => {
+    const parsed = parseProjectFile(JSON.stringify(v2Payload()));
+    expect(parsed.formatVersion).toBe(CURRENT_FORMAT_VERSION);
+    expect(parsed.diagram.nodes.every((node) => node.locked === false)).toBe(true);
+  });
+
+  it('ne signale aucun avertissement pour une migration v1 → v3 réussie', () => {
     const { project, warnings } = parseProjectFileWithWarnings(JSON.stringify(v1Payload()));
     expect(project.diagram.comments).toEqual([]);
     expect(warnings).toEqual([]);
   });
 
-  it('reste stable en v2 après un aller-retour export/import', () => {
-    const migrated = parseProjectFile(JSON.stringify(v1Payload()));
-    const reimported = parseProjectFile(serializeProject(migrated));
-    expect(reimported).toEqual(migrated);
-    expect(reimported.formatVersion).toBe(2);
+  it('reste stable après un aller-retour export/import (v1 comme v2)', () => {
+    const migratedFromV1 = parseProjectFile(JSON.stringify(v1Payload()));
+    const reimportedFromV1 = parseProjectFile(serializeProject(migratedFromV1));
+    expect(reimportedFromV1).toEqual(migratedFromV1);
+    expect(reimportedFromV1.formatVersion).toBe(CURRENT_FORMAT_VERSION);
+
+    const migratedFromV2 = parseProjectFile(JSON.stringify(v2Payload()));
+    const reimportedFromV2 = parseProjectFile(serializeProject(migratedFromV2));
+    expect(reimportedFromV2).toEqual(migratedFromV2);
+    expect(reimportedFromV2.formatVersion).toBe(CURRENT_FORMAT_VERSION);
   });
 });
 

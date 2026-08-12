@@ -1,6 +1,6 @@
 # Roadmap
 
-## v0.1 — Socle (en cours)
+## v0.1 — Socle (terminé)
 
 - [x] Création d'entités et d'attributs typés
 - [x] Identifiants primaires simples ou composés
@@ -9,8 +9,9 @@
 - [x] Validation continue (erreurs + avertissements)
 - [x] Sauvegarde locale automatique (IndexedDB) et rechargement du dernier projet
 - [x] Import / export `.merise.json` validé
-- [ ] Gestion complète des identifiants alternatifs dans l'inspecteur
-- [ ] Nœuds de commentaire
+- [x] Gestion complète des identifiants alternatifs dans l'inspecteur (livré
+      en v0.5, voir plus bas)
+- [x] Nœuds de commentaire (livré en v0.4)
 
 ## v0.2 — Modèle logique (terminé)
 
@@ -65,9 +66,33 @@
 - [x] Garde-fou de fermeture d'onglet (modifications non enregistrées),
       état vide du canvas
 
+## v0.5 — Modélisation, disposition et performance (terminé)
+
+- [x] Éditeur complet d'identifiants alternatifs/composés dans l'inspecteur
+      d'entité (créer, renommer, réordonner/retirer des attributs, promouvoir
+      en primaire, supprimer) — voir [identifiers.md](identifiers.md)
+- [x] Organisation automatique du diagramme (dagre, horizontal/vertical,
+      une seule entrée d'historique) — voir [auto-layout.md](auto-layout.md)
+- [x] Alignement (6 directions) et distribution (horizontale/verticale) de
+      la sélection multiple
+- [x] Verrouillage de nœuds (sélectionnable/éditable mais jamais déplacé,
+      ni par glisser-déposer ni par l'auto-layout), migration de format
+      v2 → v3
+- [x] Panneaux redimensionnables (bibliothèque, inspecteur, panneau
+      inférieur) avec persistance locale, et interface tablette (< 1200px,
+      tiroirs non modaux) — voir [responsive-layout.md](responsive-layout.md)
+- [x] Navigation clavier entre problèmes de validation (F8 / Maj+F8)
+- [x] Code-splitting (dialectes SQL, panneaux MLD/SQL, export PNG,
+      bibliothèque d'auto-layout) et script `pnpm analyze` — voir
+      [performance.md](performance.md)
+- [x] Barre de statut compacte et aide de premier lancement (4 étapes,
+      refermable)
+- [x] Mémoïsation ciblée des nœuds/arêtes du diagramme et sélecteurs
+      Zustand resserrés, vérifiés sur un modèle de ~100 entités / 150
+      associations
+
 ## v1.0 — Stabilisation
 
-- [ ] Panneaux redimensionnables
 - [ ] Documentation complète
 - [ ] Couverture de tests renforcée
 - [ ] Exemples supplémentaires (e-commerce, bibliothèque…)

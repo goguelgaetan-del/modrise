@@ -8,6 +8,22 @@ import type { Edge, EdgeProps } from '@xyflow/react';
 import { cn } from '@/lib/utils';
 import type { ParticipationEdgeData } from '../adapters/to-react-flow';
 
+type ParticipationEdgeProps = EdgeProps<Edge<ParticipationEdgeData, 'participation'>>;
+
+/** Voir le commentaire équivalent dans `EntityNode.tsx`. */
+function arePropsEqual(prev: ParticipationEdgeProps, next: ParticipationEdgeProps): boolean {
+  return (
+    prev.selected === next.selected &&
+    prev.sourceX === next.sourceX &&
+    prev.sourceY === next.sourceY &&
+    prev.targetX === next.targetX &&
+    prev.targetY === next.targetY &&
+    prev.data?.cardinalityLabel === next.data?.cardinalityLabel &&
+    prev.data?.role === next.data?.role &&
+    prev.data?.hasErrors === next.data?.hasErrors
+  );
+}
+
 export const ParticipationEdge = memo(function ParticipationEdge({
   id,
   sourceX,
@@ -16,7 +32,7 @@ export const ParticipationEdge = memo(function ParticipationEdge({
   targetY,
   data,
   selected,
-}: EdgeProps<Edge<ParticipationEdgeData, 'participation'>>) {
+}: ParticipationEdgeProps) {
   const [path] = getStraightPath({ sourceX, sourceY, targetX, targetY });
   // La cardinalité est placée près de l'entité (côté source de l'arête).
   const labelX = sourceX + (targetX - sourceX) * 0.3;
@@ -45,4 +61,4 @@ export const ParticipationEdge = memo(function ParticipationEdge({
       )}
     </>
   );
-});
+}, arePropsEqual);

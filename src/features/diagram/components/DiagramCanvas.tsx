@@ -31,6 +31,7 @@ import { CommentNode } from '../nodes/CommentNode';
 import { ParticipationEdge } from '../edges/ParticipationEdge';
 import { useKeyboardShortcuts } from '../hooks/use-keyboard-shortcuts';
 import { EmptyCanvasState } from './EmptyCanvasState';
+import { OnboardingHelp } from './OnboardingHelp';
 import { CanvasContextMenu } from './CanvasContextMenu';
 import { useContextMenu } from '../hooks/use-context-menu';
 
@@ -187,6 +188,7 @@ export function DiagramCanvas({ onRequestDeleteSelection }: DiagramCanvasProps) 
         <Controls showInteractive={false} />
       </ReactFlow>
       {isEmpty && <EmptyCanvasState />}
+      <OnboardingHelp />
       <CanvasContextMenu
         state={contextMenu.state}
         onClose={contextMenu.close}

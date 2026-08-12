@@ -4,11 +4,11 @@ Les projets Modrise s'exportent dans un fichier JSON versionné portant
 l'extension `.merise.json`. Implémentation :
 `src/core/serialization/file-format.ts`.
 
-## Structure (version 2)
+## Structure (version 3)
 
 ```json
 {
-  "formatVersion": 2,
+  "formatVersion": 3,
   "project": {
     "id": "…",
     "name": "Gestion d'hôtel",
@@ -21,7 +21,7 @@ l'extension `.merise.json`. Implémentation :
     "associations": []
   },
   "diagram": {
-    "nodes": [],
+    "nodes": [{ "id": "…", "modelId": "…", "nodeType": "entity", "position": { "x": 0, "y": 0 }, "locked": false }],
     "viewport": { "x": 0, "y": 0, "zoom": 1 },
     "comments": []
   },
@@ -39,6 +39,11 @@ l'extension `.merise.json`. Implémentation :
 `conceptualModel` et n'affectent ni la validation, ni le MLD, ni le SQL. Voir
 [editor-history.md](editor-history.md) pour le reste des ajouts d'édition du
 v0.4 (annuler/rétablir, presse-papiers).
+
+`diagram.nodes[].locked` (v3, v0.5) : un nœud verrouillé reste sélectionnable
+et éditable mais ne peut être déplacé ni par un glisser-déposer, ni par
+l'auto-layout ou les outils d'alignement/distribution. Purement graphique,
+comme les commentaires. Voir [auto-layout.md](auto-layout.md).
 
 Un exemple complet : [`examples/gestion-hotel.merise.json`](../examples/gestion-hotel.merise.json).
 
@@ -79,6 +84,11 @@ Toute évolution incompatible du format :
 au modèle conceptuel ni aux positions existantes. Un fichier v1 exporté avant
 le v0.4 s'importe donc normalement, et son ré-export produit un fichier v2
 stable.
+
+**v2 → v3** (`addNodeLocked`, v0.5) : un fichier v2 n'a jamais `locked` sur
+ses nœuds ; la migration l'ajoute à `false` sur chacun (aucun nœud
+verrouillé), sans toucher au reste. Un fichier v1 s'importe donc en
+chaînant les deux migrations (v1 → v2 → v3) automatiquement.
 
 Un fichier d'une version plus récente que celle supportée est refusé avec un
 message invitant à mettre Modrise à jour.
