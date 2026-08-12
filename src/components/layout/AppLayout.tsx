@@ -12,7 +12,7 @@
  * pendant qu'un tiroir est ouvert) : voir `InspectorDrawer` et le tiroir de
  * bibliothèque ci-dessous.
  */
-import { useState } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import { PanelLeft, PanelLeftClose } from 'lucide-react';
 import { Group, Panel, Separator, usePanelRef, useDefaultLayout } from 'react-resizable-panels';
 import { DiagramCanvas } from '@/features/diagram/components/DiagramCanvas';
@@ -29,6 +29,17 @@ import { SidebarLeft } from './SidebarLeft';
 import { StatusBar } from './StatusBar';
 import { TopBar } from './TopBar';
 import { NarrowScreenNotice } from './NarrowScreenNotice';
+import { isPerformanceDebugEnabled } from '@/lib/performance/diagnostics';
+
+/**
+ * Panneau de diagnostic réservé au développement : `import.meta.env.DEV`
+ * vaut littéralement `false` dans un build de production, la branche entière
+ * — import dynamique compris — est donc éliminée et le module ne fait pas
+ * partie de ce qui est livré.
+ */
+const PerformanceDebugPanel = import.meta.env.DEV
+  ? lazy(() => import('@/features/diagnostics/PerformanceDebugPanel'))
+  : null;
 
 const SEPARATOR_CLASS =
   'group relative shrink-0 bg-border outline-none data-[orientation=horizontal]:h-px ' +
@@ -133,6 +144,11 @@ export function AppLayout() {
 
       <DeleteConfirmationDialog deletion={deletion} />
       <Notifications />
+      {PerformanceDebugPanel && isPerformanceDebugEnabled() && (
+        <Suspense fallback={null}>
+          <PerformanceDebugPanel />
+        </Suspense>
+      )}
     </div>
   );
 }

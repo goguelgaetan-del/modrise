@@ -95,9 +95,14 @@ src/
 │   ├── logical-model/      # useLogicalModel (hook dérivé mémoïsé), panneau MLD
 │   ├── sql-preview/        # useSqlGeneration, panneau SQL (sélecteur de
 │   │                       # dialecte, aperçu, copier, télécharger)
-│   └── projects/           # import / export de fichiers, nouveau projet
+│   ├── projects/           # import / export de fichiers, nouveau projet
+│   └── diagnostics/        # PerformanceDebugPanel (développement seul,
+│                           # ?debugPerformance=1, v0.5.1)
 ├── lib/                    # use-media-query.ts (points de rupture
-│                           # responsive, v0.5, voir docs/responsive-layout.md)
+│                           # responsive, v0.5, voir docs/responsive-layout.md) ;
+│                           # performance/diagnostics.ts (instrumentation
+│                           # locale de développement, v0.5.1, voir
+│                           # docs/canvas-performance.md)
 ├── components/
 │   ├── layout/             # TopBar, SidebarLeft, InspectorPanel, BottomPanel,
 │   │                       # StatusBar (v0.5), InspectorDrawer et

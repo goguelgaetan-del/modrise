@@ -208,6 +208,61 @@ Coût en poids de bundle : chunk principal 855,69 kB → **857,38 kB**
 (263,50 → 264,05 kB gzip), soit **+1,69 kB**, sans aucune dépendance
 ajoutée.
 
+## L'instrumentation — `src/lib/performance/diagnostics.ts`
+
+Les chiffres ci-dessus ont été obtenus au chronomètre, depuis Playwright.
+Pour pouvoir observer un déplacement *à la main* sans rebrancher un
+chronomètre à chaque fois, un module de diagnostic local est disponible en
+développement.
+
+```ts
+export interface PerformanceMeasurement {
+  label: string;
+  durationMs: number;
+  metadata?: Record<string, number | string>;
+}
+```
+
+`measureSync(label, operation, metadata)` encadre une opération de
+`performance.mark` / `performance.measure`, retourne son résultat inchangé
+et **efface ses marqueurs aussitôt la mesure lue** — sans quoi une session
+un peu longue accumulerait des milliers d'entrées dans la chronologie du
+navigateur. `countEvent(nom)` incrémente un compteur. Les mesures vivent
+dans un tampon circulaire de 50 entrées, en mémoire.
+
+Quatre points sont instrumentés : le commit de déplacement
+(`drag-commit`, avec le nombre de nœuds et la durée du geste), les rendus
+du canvas, les recalculs MLD, les recalculs SQL et les sauvegardes.
+
+Le panneau (`?debugPerformance=1`, en bas à gauche) affiche ces compteurs
+en direct. C'est l'outil qui rend l'invariant central *visible* : on
+déplace un nœud d'un bout à l'autre de l'écran et les compteurs MLD, SQL et
+sauvegarde ne bougent pas tant que le bouton reste enfoncé.
+
+Trois garanties, dans l'ordre d'importance :
+
+1. **Aucune donnée ne quitte le navigateur.** Pas de télémétrie, pas de
+   requête réseau, pas de stockage persistant : tout disparaît au
+   rechargement.
+2. **Le panneau n'existe pas en production.** Sa création est gardée par
+   `import.meta.env.DEV`, que Vite remplace littéralement par `false` :
+   l'import dynamique lui-même est éliminé. Vérifié sur le build, pas
+   supposé — aucun chunk n'est émis pour le panneau, et ni
+   `performance-debug-panel`, ni `Diagnostic de performance`, ni
+   `debugPerformance` n'apparaissent dans `dist/`.
+3. **Aucun changement de comportement.** Hors diagnostic actif — donc dans
+   la quasi-totalité des sessions, y compris en développement —
+   `measureSync` se réduit à un appel direct, `countEvent` à un retour
+   immédiat, et aucun abonné n'est notifié, donc aucun rendu n'est
+   provoqué. C'est ce que vérifient en premier les tests de
+   `diagnostics.test.ts`.
+
+Ce qui subsiste en production, ce sont les fonctions gardées et leurs
+étiquettes aux points d'appel : **+0,78 kB** sur le chunk principal
+(857,54 → 858,32 kB), soit **+0,29 kB gzip** (264,12 → 264,41 kB) —
+mesuré en construisant le même arbre avec et sans le bloc
+d'instrumentation.
+
 ## Ce qui garantit que ça ne régresse pas
 
 Les mesures en millisecondes sont instables en intégration continue ; les
@@ -243,6 +298,11 @@ absolue.
   (il est de 1,3-1,4×). Ce seuil détecte un retour à l'architecture
   précédente (8,7×) sans se déclencher pour quelques millisecondes de
   variation d'une machine à l'autre.
+- `src/lib/performance/diagnostics.test.ts` — l'instrumentation elle-même :
+  inactive, elle n'enregistre rien, ne pose aucun marqueur, ne notifie
+  aucun abonné et retourne le résultat de l'opération inchangé.
+- `e2e/performance-panel.spec.ts` — le panneau reste absent sans le
+  paramètre d'URL, et n'apparaît qu'avec lui.
 
 La fixture déterministe partagée est `e2e/fixtures/large-model.ts`
 (`createLargeModelFixture` / `writeLargeModelFixture`), qui produit un
@@ -263,7 +323,7 @@ aux fuites :
 | Écouteurs (`keydown`, `beforeunload`, `matchMedia`) | Tous retirés dans le nettoyage de leur effet |
 | Caches | Aucun cache ajouté par cette passe. Le seul cache au niveau module reste le registre des dialectes SQL, borné à trois entrées ; les `Map` des adaptateurs et de l'auto-layout sont construites par appel et ne retiennent rien |
 | Historique | Borné à `MAX_HISTORY_ENTRIES` (100), et vidé à l'import comme à la création d'un projet |
-| Marqueurs de performance | Aucun. Rien n'appelle `performance.mark` ni `performance.measure` dans le code livré |
+| Marqueurs de performance | Posés uniquement par `measureSync`, donc uniquement quand le diagnostic est actif, et effacés (`clearMarks` / `clearMeasures`) dès la mesure lue. Le tampon de mesures est borné à 50 entrées |
 
 Seule réserve, antérieure à cette passe et sans conséquence : `notify`
 (`ui-store`) programme un effacement automatique à 6 s qui n'est pas

@@ -15,7 +15,7 @@
  * écriture, une entrée d'historique, une sauvegarde (v0.5.1, voir
  * docs/canvas-performance.md).
  */
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Background,
   BackgroundVariant,
@@ -51,6 +51,7 @@ import { AssociationNode } from '../nodes/AssociationNode';
 import { EntityNode } from '../nodes/EntityNode';
 import { CommentNode } from '../nodes/CommentNode';
 import { ParticipationEdge } from '../edges/ParticipationEdge';
+import { countEvent, measureSync } from '@/lib/performance/diagnostics';
 import { useKeyboardShortcuts } from '../hooks/use-keyboard-shortcuts';
 import { EmptyCanvasState } from './EmptyCanvasState';
 import { OnboardingHelp } from './OnboardingHelp';
@@ -117,6 +118,12 @@ export function DiagramCanvas({ onRequestDeleteSelection }: DiagramCanvasProps) 
   const nodes = applyDragPreviewToNodes(baseNodes, dragPositions);
   const edges = applyDragPreviewToEdges(baseEdges, diagramNodes, dragPositions);
 
+  // Compteur de rendus du canvas : sans tableau de dépendances, l'effet
+  // s'exécute à chaque rendu validé. Sans effet hors diagnostic actif.
+  useEffect(() => {
+    countEvent('canvas-render');
+  });
+
   /**
    * Clôt la transaction en cours : une seule écriture du store, une seule
    * entrée d'historique, puis une seule sauvegarde (déclenchée par
@@ -136,11 +143,17 @@ export function DiagramCanvas({ onRequestDeleteSelection }: DiagramCanvasProps) 
     const movedCount = Object.keys(moved).length;
     if (movedCount === 0) return;
 
-    moveNodes(moved);
-    const after = captureEditorSnapshot();
-    if (before.diagramNodes === after.diagramNodes) return;
-    const label = movedCount > 1 ? `Déplacer ${movedCount} éléments` : 'Déplacer un élément';
-    useHistoryStore.getState().pushEntry({ label, before, after });
+    measureSync(
+      'drag-commit',
+      () => {
+        moveNodes(moved);
+        const after = captureEditorSnapshot();
+        if (before.diagramNodes === after.diagramNodes) return;
+        const label = movedCount > 1 ? `Déplacer ${movedCount} éléments` : 'Déplacer un élément';
+        useHistoryStore.getState().pushEntry({ label, before, after });
+      },
+      { nodes: movedCount, gestureMs: Math.round(performance.now() - transaction.startedAt) },
+    );
   }, [moveNodes]);
 
   const onNodesChange = useCallback(
