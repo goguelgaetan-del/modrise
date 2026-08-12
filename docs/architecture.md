@@ -110,7 +110,9 @@ src/
 │   │                       # redimensionnables via react-resizable-panels
 │   ├── common/             # éditeurs partagés, notifications
 │   └── ui/                 # composants shadcn/ui générés
-└── app/                    # App, providers (React Flow, tooltips, thème)
+└── app/                    # App, providers (React Flow, tooltips, thème),
+                            # ErrorBoundary (montée au-dessus de App dans
+                            # main.tsx, v0.5.1)
 ```
 
 ## Flux de données

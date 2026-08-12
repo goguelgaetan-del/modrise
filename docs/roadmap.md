@@ -106,6 +106,10 @@
       millisecondes
 - [x] Fixture déterministe de grand modèle partagée entre tests unitaires
       et Playwright
+- [x] Instrumentation locale de développement et panneau de diagnostic
+      caché derrière `?debugPerformance=1`, absent du build de production
+- [x] Barrière d'erreur React : plus d'écran blanc, rechargement et export
+      du projet proposés, aucune pile d'appels exposée en production
 
 ## v1.0 — Stabilisation
 
@@ -122,9 +126,10 @@ confiance qu'un utilisateur peut placer dans l'outil pour un travail réel.
 - [ ] Robustesse de l'import/export : fichier tronqué, JSON invalide,
       version future inconnue, très gros fichier — message clair dans
       chaque cas, jamais d'écran blanc
-- [ ] Gestion des erreurs non rattrapées : périmètre d'erreur React
+- [x] Gestion des erreurs non rattrapées : périmètre d'erreur React
       (message compréhensible, rechargement possible, export du projet
       local avant de perdre l'état), sans masquer l'erreur silencieusement
+      — livré en v0.5.1 (`src/app/ErrorBoundary.tsx`)
 - [ ] Documentation utilisateur (pas seulement de développement) :
       prise en main, notions Merise couvertes, limites connues
 - [ ] Exemples supplémentaires livrés (e-commerce, bibliothèque…) en plus
