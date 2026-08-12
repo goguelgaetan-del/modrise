@@ -250,6 +250,26 @@ La fixture déterministe partagée est `e2e/fixtures/large-model.ts`
 `n-a-0`, `n-c-0`), et son équivalent en mémoire pour les tests unitaires
 dans `src/tests/fixtures/models.ts` (`largeModel` / `largeDiagram`).
 
+## Audit de rétention
+
+Vérifié explicitement, une optimisation par cache étant un terrain propice
+aux fuites :
+
+| Ressource | État |
+|---|---|
+| Transactions de déplacement | État local du composant (`useState` + `ref`), aucun registre au niveau module — une transaction interrompue par un démontage disparaît avec le canvas |
+| Minuteur d'autosauvegarde | `startAutosave` retourne un arrêt qui annule le minuteur et se désabonne des deux stores ; appelé au démontage dans `App.tsx` |
+| URLs d'objet (exports) | Cinq points de création, cinq révocations — dont un `.finally()` pour le chemin PNG, qui révoque même en cas d'échec |
+| Écouteurs (`keydown`, `beforeunload`, `matchMedia`) | Tous retirés dans le nettoyage de leur effet |
+| Caches | Aucun cache ajouté par cette passe. Le seul cache au niveau module reste le registre des dialectes SQL, borné à trois entrées ; les `Map` des adaptateurs et de l'auto-layout sont construites par appel et ne retiennent rien |
+| Historique | Borné à `MAX_HISTORY_ENTRIES` (100), et vidé à l'import comme à la création d'un projet |
+| Marqueurs de performance | Aucun. Rien n'appelle `performance.mark` ni `performance.measure` dans le code livré |
+
+Seule réserve, antérieure à cette passe et sans conséquence : `notify`
+(`ui-store`) programme un effacement automatique à 6 s qui n'est pas
+annulable. La rétention est bornée par le nombre de notifications
+affichées et s'éteint d'elle-même.
+
 ## Limites connues
 
 - **Le côté de raccordement des arêtes est figé pendant le glissement**
