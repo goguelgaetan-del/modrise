@@ -119,16 +119,20 @@ Ces points conditionnent la publication d'une v1.0 : ils touchent la
 confiance qu'un utilisateur peut placer dans l'outil pour un travail réel.
 
 - [x] Performance sur les grands modèles (livré en v0.5.1)
-- [ ] Engagement de compatibilité durable du format `.merise.json` :
-      fixtures immuables par version passée (v1, v2, v3) plutôt que des
-      anciens formats refabriqués depuis le sérialiseur courant, et test de
-      stabilité après réexport/réimport. La politique elle-même est
-      documentée dans [versioning.md](versioning.md) — les migrations sont
-      **montantes uniquement**, ce qui est une limite assumée et non un
+- [x] Engagement de compatibilité durable du format `.merise.json` :
+      fixtures immuables par version passée (v1, v2, v3) dans
+      `src/tests/fixtures/formats/`, écrites à la main et jamais régénérées
+      — avec garde-fou contre une régénération accidentelle —, testées
+      jusqu'au format courant puis en stabilité après réexport/réimport. La
+      politique est documentée dans [versioning.md](versioning.md) : les
+      migrations sont **montantes uniquement**, limite assumée et non un
       engagement dans les deux sens
-- [ ] Robustesse de l'import/export : fichier tronqué, JSON invalide,
-      version future inconnue, très gros fichier — message clair dans
-      chaque cas, jamais d'écran blanc
+- [x] Robustesse de l'import/export : fichier vide, illisible, tronqué, JSON
+      invalide, JSON valide non-projet, version future inconnue, structure
+      invalide, très gros fichier (limite de 16 Mio vérifiée avant lecture) —
+      message dédié dans chaque cas, projet en cours intact, application
+      toujours utilisable ; couvert en unitaire et en bout en bout (voir
+      [file-format.md](file-format.md#cas-refuses-et-leur-message))
 - [x] Gestion des erreurs non rattrapées : périmètre d'erreur React
       (message compréhensible, rechargement possible, export du projet
       local avant de perdre l'état), sans masquer l'erreur silencieusement

@@ -96,6 +96,69 @@ test("rejette un fichier d'import invalide sans casser l'application", async ({ 
   await expect(page.getByTestId('entity-node-CLIENT')).toBeVisible();
 });
 
+/**
+ * Un import refusé doit laisser l'application *utilisable*, pas seulement
+ * affichée : ces trois scénarios vérifient donc le message, puis rouvrent
+ * l'inspecteur sur une entité et modifient le projet pour prouver que rien
+ * n'est resté bloqué.
+ */
+interface ImportPayload {
+  name: string;
+  mimeType: string;
+  buffer: Buffer;
+}
+
+async function expectRefusedImport(page: Page, file: ImportPayload): Promise<void> {
+  await page.getByTestId('import-file-input').setInputFiles(file);
+  await expect(page.getByText(/Import impossible/)).toBeVisible();
+
+  // Le projet en cours est intact...
+  await expect(page.getByTestId('project-name-input')).toHaveValue("Gestion d'hôtel");
+  await expect(page.getByTestId('entity-node-CLIENT')).toBeVisible();
+
+  // ...et l'application répond encore aux interactions.
+  await page.getByTestId('entity-node-CLIENT').click();
+  await expect(page.getByTestId('entity-name-input')).toBeVisible();
+}
+
+test("refuse un fichier tronqué sans casser l'application", async ({ page }) => {
+  await expectRefusedImport(page, {
+    name: 'tronque.merise.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('{"formatVersion": 3, "project": {"id": "abc", "na'),
+  });
+  await expect(page.getByText(/ne contient pas de JSON valide/)).toBeVisible();
+});
+
+test("refuse un fichier d'une version future en indiquant quoi faire", async ({ page }) => {
+  const fs = await import('node:fs/promises');
+  const raw = JSON.parse(
+    await fs.readFile(new URL('../src/tests/fixtures/formats/v3.merise.json', import.meta.url), 'utf8'),
+  ) as { formatVersion: number };
+  raw.formatVersion = 99;
+
+  await expectRefusedImport(page, {
+    name: 'futur.merise.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(raw)),
+  });
+  await expect(page.getByText(/Mettez Modrise à jour/)).toBeVisible();
+});
+
+test("refuse un fichier surdimensionné sans figer l'onglet", async ({ page }) => {
+  // 16 Mio + 1 octet : juste au-dessus de MAX_PROJECT_FILE_BYTES. Le contenu
+  // n'a pas d'importance — il ne doit jamais être lu.
+  const oversized = Buffer.alloc(16 * 1024 * 1024 + 1, 0x20);
+  oversized.write('{"formatVersion":3}');
+
+  await expectRefusedImport(page, {
+    name: 'enorme.merise.json',
+    mimeType: 'application/json',
+    buffer: oversized,
+  });
+  await expect(page.getByText(/limite d'import/)).toBeVisible();
+});
+
 test('protège la suppression d’une entité référencée', async ({ page }) => {
   await page.getByTestId('entity-node-CLIENT').click();
   await page.getByRole('button', { name: "Supprimer l'entité" }).click();
