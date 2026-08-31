@@ -1,20 +1,20 @@
 {
-  "formatVersion": 2,
+  "formatVersion": 3,
   "project": {
-    "id": "dc54f97c-6797-4556-96e2-24d8d89f2606",
+    "id": "84f7b81d-f7ef-8eba-80b5-722f5f024b14",
     "name": "Gestion d'hôtel",
     "description": "Projet d'exemple : clients, chambres et réservations.",
-    "createdAt": "2026-07-30T10:00:33.359Z",
-    "updatedAt": "2026-07-30T10:00:33.359Z"
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
   },
   "conceptualModel": {
     "entities": [
       {
-        "id": "443c83a0-463e-4a66-80c5-2af163ff0cfe",
+        "id": "0a36c403-9598-855c-852b-0335b643f5a6",
         "name": "CLIENT",
         "attributes": [
           {
-            "id": "88b6cd65-6d87-424c-90f9-100ec891fad9",
+            "id": "737e7874-08c5-8df9-8b40-ce6e520965e3",
             "name": "id_client",
             "dataType": {
               "kind": "integer"
@@ -23,7 +23,7 @@
             "unique": false
           },
           {
-            "id": "f0ee705a-a603-4644-b77e-d92fba1917bf",
+            "id": "7c10b73f-4ebe-8a72-8ffa-924d7b700580",
             "name": "nom",
             "dataType": {
               "kind": "varchar",
@@ -33,7 +33,7 @@
             "unique": false
           },
           {
-            "id": "57dc6050-013a-4209-abae-567abe0f0ea1",
+            "id": "41b93372-7afe-81a5-82c8-94504c425883",
             "name": "prenom",
             "dataType": {
               "kind": "varchar",
@@ -43,7 +43,7 @@
             "unique": false
           },
           {
-            "id": "a6b12639-7029-415b-8f73-b0f9c66e56fc",
+            "id": "6dc16861-69cb-83c4-8a28-d85f7c19eb2a",
             "name": "email",
             "dataType": {
               "kind": "varchar",
@@ -53,7 +53,7 @@
             "unique": true
           },
           {
-            "id": "0699e0a2-de54-41e0-8cd9-132dabddb394",
+            "id": "04dc0511-a122-8da8-8afd-ed3f66c00026",
             "name": "telephone",
             "dataType": {
               "kind": "varchar",
@@ -65,20 +65,20 @@
         ],
         "identifiers": [
           {
-            "id": "e0d7fd08-5b43-4f17-b368-1c65f5da5a84",
+            "id": "dd9acd9f-00e6-8ffe-80dc-a8a11e48f9e0",
             "attributeIds": [
-              "88b6cd65-6d87-424c-90f9-100ec891fad9"
+              "737e7874-08c5-8df9-8b40-ce6e520965e3"
             ],
             "primary": true
           }
         ]
       },
       {
-        "id": "a76ac702-8a50-4ae9-ab02-b2bdf96a07f8",
+        "id": "2fc8e5a8-4d06-8f51-8de9-d742abf82e33",
         "name": "CHAMBRE",
         "attributes": [
           {
-            "id": "64353701-22d2-45cb-a128-95016f0206b5",
+            "id": "15e0630e-a5c8-8c4b-89b5-90c0eb122e7d",
             "name": "id_chambre",
             "dataType": {
               "kind": "integer"
@@ -87,7 +87,7 @@
             "unique": false
           },
           {
-            "id": "2aec4dd1-75a3-4814-915c-6fb23fa0f5e0",
+            "id": "1f13103c-ef7c-8105-8889-f012c68fbd2b",
             "name": "numero",
             "dataType": {
               "kind": "varchar",
@@ -97,7 +97,7 @@
             "unique": true
           },
           {
-            "id": "4f744a5e-5420-4b3c-a342-2d63ad81cfb2",
+            "id": "2571f6a4-37a0-8a65-86b2-b526b4b1337f",
             "name": "type",
             "dataType": {
               "kind": "varchar",
@@ -107,7 +107,7 @@
             "unique": false
           },
           {
-            "id": "0d65f271-dc14-4a45-83e2-ae65948adc07",
+            "id": "477ff774-5abb-8257-8c64-4fbe0f804b69",
             "name": "etage",
             "dataType": {
               "kind": "integer"
@@ -116,7 +116,7 @@
             "unique": false
           },
           {
-            "id": "031ec486-4dc5-48f2-8a8b-84abe0fd6b34",
+            "id": "3c76bb7c-dc23-89bb-8f03-d8fed4b9c7e5",
             "name": "prix_nuit",
             "dataType": {
               "kind": "decimal",
@@ -129,20 +129,20 @@
         ],
         "identifiers": [
           {
-            "id": "bcbeb4dd-2a26-4d8b-9dfc-b4362edd66bf",
+            "id": "ad3f659e-5c9a-8969-83b7-caa07ac9ebab",
             "attributeIds": [
-              "64353701-22d2-45cb-a128-95016f0206b5"
+              "15e0630e-a5c8-8c4b-89b5-90c0eb122e7d"
             ],
             "primary": true
           }
         ]
       },
       {
-        "id": "a5381286-a437-4674-8a3e-f6bff4863fd0",
+        "id": "983bf412-ac47-8fdb-8046-96303356dd71",
         "name": "RESERVATION",
         "attributes": [
           {
-            "id": "ae68a131-75e6-4b45-b793-8267072c2a35",
+            "id": "63c971f6-a94c-81af-83c1-7a98d66b30c9",
             "name": "id_reservation",
             "dataType": {
               "kind": "integer"
@@ -151,7 +151,7 @@
             "unique": false
           },
           {
-            "id": "84b4a9d4-5e3a-4913-bdd7-8ff40871b363",
+            "id": "4427832f-eab7-82e2-8e38-bf451b087678",
             "name": "date_arrivee",
             "dataType": {
               "kind": "date"
@@ -160,7 +160,7 @@
             "unique": false
           },
           {
-            "id": "f2c5571d-dee3-4842-b7cd-1d8789caea27",
+            "id": "e260a5ed-8db5-8e7a-8cd5-cd0f81c9746c",
             "name": "date_depart",
             "dataType": {
               "kind": "date"
@@ -169,7 +169,7 @@
             "unique": false
           },
           {
-            "id": "a1f68b8c-b368-4134-be56-86a523a38f87",
+            "id": "17b4d04d-a7b4-8560-8550-ceaf9817fcba",
             "name": "nombre_personnes",
             "dataType": {
               "kind": "integer"
@@ -178,7 +178,7 @@
             "unique": false
           },
           {
-            "id": "4a595438-3649-45b3-93f7-5abfe1deb0d7",
+            "id": "65c165d9-e7fc-8c9c-8922-157b707eb86e",
             "name": "statut",
             "dataType": {
               "kind": "varchar",
@@ -190,9 +190,9 @@
         ],
         "identifiers": [
           {
-            "id": "4c1163ba-b6ff-4ffa-ba27-e38496de473f",
+            "id": "bc932ed8-d80f-8efb-8108-1ffe9d6d7af1",
             "attributeIds": [
-              "ae68a131-75e6-4b45-b793-8267072c2a35"
+              "63c971f6-a94c-81af-83c1-7a98d66b30c9"
             ],
             "primary": true
           }
@@ -201,21 +201,21 @@
     ],
     "associations": [
       {
-        "id": "e95ed189-292b-479b-8bda-0858928a3bfd",
+        "id": "c5a39d73-73be-8378-8a98-0c7923138da6",
         "name": "EFFECTUER",
         "attributes": [],
         "participations": [
           {
-            "id": "33aeda0d-bf35-4c85-aba0-b9bbe04ef5be",
-            "entityId": "443c83a0-463e-4a66-80c5-2af163ff0cfe",
+            "id": "87b8fade-49cf-8089-8e35-1e10aee23d7b",
+            "entityId": "0a36c403-9598-855c-852b-0335b643f5a6",
             "cardinality": {
               "min": 0,
               "max": "N"
             }
           },
           {
-            "id": "88236d48-f39c-4216-a309-dcd1f43bc05f",
-            "entityId": "a5381286-a437-4674-8a3e-f6bff4863fd0",
+            "id": "88b8fc71-48cf-8ef6-8f35-1fa3ade23be8",
+            "entityId": "983bf412-ac47-8fdb-8046-96303356dd71",
             "cardinality": {
               "min": 1,
               "max": 1
@@ -224,11 +224,11 @@
         ]
       },
       {
-        "id": "b0af1cd0-9825-4fb2-9cf1-65f8deb9775a",
+        "id": "0b880727-c455-8488-8a98-57d15a34519a",
         "name": "CONCERNER",
         "attributes": [
           {
-            "id": "a1835a75-770c-4d42-b869-f8954422f6d9",
+            "id": "9a8bb4c5-2e6a-8974-8936-5e1bb2de4152",
             "name": "prix_convenu",
             "dataType": {
               "kind": "decimal",
@@ -241,16 +241,16 @@
         ],
         "participations": [
           {
-            "id": "d8d1ccd5-428c-44f8-9c7a-90258aa80273",
-            "entityId": "a5381286-a437-4674-8a3e-f6bff4863fd0",
+            "id": "f6066556-0225-8fe5-8d92-a63c3a4c793b",
+            "entityId": "983bf412-ac47-8fdb-8046-96303356dd71",
             "cardinality": {
               "min": 1,
               "max": "N"
             }
           },
           {
-            "id": "b0f7b6e0-396e-4c05-8427-adc607702f66",
-            "entityId": "a76ac702-8a50-4ae9-ab02-b2bdf96a07f8",
+            "id": "f70666e9-0125-8e52-8e92-a7cf394c77a8",
+            "entityId": "2fc8e5a8-4d06-8f51-8de9-d742abf82e33",
             "cardinality": {
               "min": 0,
               "max": "N"
@@ -263,8 +263,8 @@
   "diagram": {
     "nodes": [
       {
-        "id": "063eee27-aa05-49b6-941d-0e8973504a55",
-        "modelId": "443c83a0-463e-4a66-80c5-2af163ff0cfe",
+        "id": "7cc5020c-ce45-8889-811a-b10e58ae93b3",
+        "modelId": "0a36c403-9598-855c-852b-0335b643f5a6",
         "nodeType": "entity",
         "position": {
           "x": 80,
@@ -272,8 +272,8 @@
         }
       },
       {
-        "id": "2e65295a-d617-417e-a230-600b42dd4424",
-        "modelId": "a76ac702-8a50-4ae9-ab02-b2bdf96a07f8",
+        "id": "743772e1-44d3-81de-84ab-ce5b0fa576f8",
+        "modelId": "2fc8e5a8-4d06-8f51-8de9-d742abf82e33",
         "nodeType": "entity",
         "position": {
           "x": 80,
@@ -281,8 +281,8 @@
         }
       },
       {
-        "id": "e85b5333-bd14-4f06-a0fa-ed7b77e37b65",
-        "modelId": "a5381286-a437-4674-8a3e-f6bff4863fd0",
+        "id": "b89ad6ab-95f9-83fc-85ff-57695d6c52e2",
+        "modelId": "983bf412-ac47-8fdb-8046-96303356dd71",
         "nodeType": "entity",
         "position": {
           "x": 620,
@@ -290,8 +290,8 @@
         }
       },
       {
-        "id": "fd427a74-b9e9-4f53-a2da-5891d99b902b",
-        "modelId": "e95ed189-292b-479b-8bda-0858928a3bfd",
+        "id": "cb68e968-f667-85b5-8e6d-2cde83b71223",
+        "modelId": "c5a39d73-73be-8378-8a98-0c7923138da6",
         "nodeType": "association",
         "position": {
           "x": 380,
@@ -299,8 +299,8 @@
         }
       },
       {
-        "id": "ba048dc6-b07b-4cac-9018-7d86c84bbdfc",
-        "modelId": "b0af1cd0-9825-4fb2-9cf1-65f8deb9775a",
+        "id": "28634e58-a863-843d-84a8-1362c3a343b7",
+        "modelId": "0b880727-c455-8488-8a98-57d15a34519a",
         "nodeType": "association",
         "position": {
           "x": 380,

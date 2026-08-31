@@ -1,0 +1,638 @@
+{
+  "formatVersion": 3,
+  "project": {
+    "id": "3d12a8d3-51fa-8414-88fa-3109665c0f7a",
+    "name": "Boutique en ligne",
+    "description": "Projet d'exemple : catalogue, panier et commandes. Montre une association réflexive, des identifiants alternatifs et une association N,N porteuse d'attributs.",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  "conceptualModel": {
+    "entities": [
+      {
+        "id": "0b828905-641e-8bf4-8fe8-80e7d7745ade",
+        "name": "CATEGORIE",
+        "description": "Rubrique du catalogue, éventuellement rattachée à une rubrique parente.",
+        "attributes": [
+          {
+            "id": "8f4aad4e-3efa-8e8f-89b4-5904f2cf38bd",
+            "name": "id_categorie",
+            "dataType": {
+              "kind": "integer"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "6b349ff7-dbcb-85fc-8cb4-e295b44eb4ea",
+            "name": "nom",
+            "dataType": {
+              "kind": "varchar",
+              "length": 100
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "7dd23804-d278-8425-8a32-4d3e143bdbf7",
+            "name": "slug",
+            "dataType": {
+              "kind": "varchar",
+              "length": 120
+            },
+            "required": true,
+            "unique": true,
+            "description": "Identifiant lisible utilisé dans l'URL."
+          }
+        ],
+        "identifiers": [
+          {
+            "id": "8e9a0d81-ca2f-81be-8114-96f3b14f24f0",
+            "attributeIds": [
+              "8f4aad4e-3efa-8e8f-89b4-5904f2cf38bd"
+            ],
+            "primary": true
+          },
+          {
+            "id": "6c063625-edfe-87f8-8e33-2633a2c7ea06",
+            "name": "slug_unique",
+            "attributeIds": [
+              "7dd23804-d278-8425-8a32-4d3e143bdbf7"
+            ],
+            "primary": false
+          }
+        ]
+      },
+      {
+        "id": "53d06ac3-b950-83d6-8eb4-eb85bb60e270",
+        "name": "PRODUIT",
+        "attributes": [
+          {
+            "id": "8650c8e6-bcf8-898f-826a-28cc86c34505",
+            "name": "id_produit",
+            "dataType": {
+              "kind": "integer"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "6de668ba-76b8-8785-8e47-dd847cbc0237",
+            "name": "reference",
+            "dataType": {
+              "kind": "varchar",
+              "length": 40
+            },
+            "required": true,
+            "unique": true,
+            "description": "Référence catalogue, unique mais non utilisée comme clé primaire."
+          },
+          {
+            "id": "6831bd8a-98ca-8369-86dc-8bfc73f1cef3",
+            "name": "libelle",
+            "dataType": {
+              "kind": "varchar",
+              "length": 200
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "9ee65b89-606f-8de2-82b1-45bb07b43614",
+            "name": "description",
+            "dataType": {
+              "kind": "text"
+            },
+            "required": false,
+            "unique": false
+          },
+          {
+            "id": "cc8995f7-6074-867c-8eb7-d0cdfec87e32",
+            "name": "prix_ht",
+            "dataType": {
+              "kind": "decimal",
+              "precision": 10,
+              "scale": 2
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "82fd4371-2871-8104-80fb-041f2d31ddc2",
+            "name": "poids_kg",
+            "dataType": {
+              "kind": "decimal",
+              "precision": 6,
+              "scale": 3
+            },
+            "required": false,
+            "unique": false
+          },
+          {
+            "id": "a6e9e100-2667-8ac3-8a91-9266841b1bf9",
+            "name": "actif",
+            "dataType": {
+              "kind": "boolean"
+            },
+            "required": true,
+            "unique": false
+          }
+        ],
+        "identifiers": [
+          {
+            "id": "4ac84cb7-52d5-80f8-8853-d89968f4230a",
+            "attributeIds": [
+              "8650c8e6-bcf8-898f-826a-28cc86c34505"
+            ],
+            "primary": true
+          },
+          {
+            "id": "f99cdc9d-464b-8ffa-8227-ff6b09a47c38",
+            "name": "reference_unique",
+            "attributeIds": [
+              "6de668ba-76b8-8785-8e47-dd847cbc0237"
+            ],
+            "primary": false
+          }
+        ]
+      },
+      {
+        "id": "65c65399-38b5-86a6-8ef0-f61f2940229c",
+        "name": "CLIENT",
+        "attributes": [
+          {
+            "id": "09691f1a-d2eb-88e3-810a-d0a8819504b9",
+            "name": "id_client",
+            "dataType": {
+              "kind": "integer"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "fb4c6214-198e-8a53-8921-48fa547a20b9",
+            "name": "courriel",
+            "dataType": {
+              "kind": "varchar",
+              "length": 255
+            },
+            "required": true,
+            "unique": true
+          },
+          {
+            "id": "17653261-a767-8080-8d8b-28dbac8faa32",
+            "name": "nom",
+            "dataType": {
+              "kind": "varchar",
+              "length": 100
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "c7593544-fc62-8183-8177-b64e527a9e65",
+            "name": "prenom",
+            "dataType": {
+              "kind": "varchar",
+              "length": 100
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "26cd9308-0754-816b-8fd1-6a4227e91565",
+            "name": "date_inscription",
+            "dataType": {
+              "kind": "datetime"
+            },
+            "required": true,
+            "unique": false
+          }
+        ],
+        "identifiers": [
+          {
+            "id": "9bf96935-9f2b-8ce0-8c87-66bb1676d2be",
+            "attributeIds": [
+              "09691f1a-d2eb-88e3-810a-d0a8819504b9"
+            ],
+            "primary": true
+          },
+          {
+            "id": "8a55995f-5a52-8904-8caa-e09924e48fee",
+            "name": "courriel_unique",
+            "attributeIds": [
+              "fb4c6214-198e-8a53-8921-48fa547a20b9"
+            ],
+            "primary": false
+          }
+        ]
+      },
+      {
+        "id": "b4a2b46a-0246-804d-8c88-351409f8ad27",
+        "name": "COMMANDE",
+        "attributes": [
+          {
+            "id": "5d1b9706-1a10-8f57-8914-406c2dc3e185",
+            "name": "id_commande",
+            "dataType": {
+              "kind": "integer"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "c1792628-27f1-8b67-8cc4-afee5d173ef5",
+            "name": "numero",
+            "dataType": {
+              "kind": "varchar",
+              "length": 20
+            },
+            "required": true,
+            "unique": true
+          },
+          {
+            "id": "1373b9a1-9831-8654-8ae9-5defcc92c83a",
+            "name": "date_commande",
+            "dataType": {
+              "kind": "datetime"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "4087b803-87d8-8448-8a81-1501686a8c6e",
+            "name": "statut",
+            "dataType": {
+              "kind": "varchar",
+              "length": 20
+            },
+            "required": true,
+            "unique": false
+          }
+        ],
+        "identifiers": [
+          {
+            "id": "9318a308-3040-8705-8841-4ddaa2a6838f",
+            "attributeIds": [
+              "5d1b9706-1a10-8f57-8914-406c2dc3e185"
+            ],
+            "primary": true
+          }
+        ]
+      },
+      {
+        "id": "ace6d673-a978-8416-8edf-01410feaff64",
+        "name": "ADRESSE",
+        "attributes": [
+          {
+            "id": "9fbd8422-c17d-8bff-84f4-3f60cd8aff6d",
+            "name": "id_adresse",
+            "dataType": {
+              "kind": "integer"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "995b23ee-c025-8861-8468-c184785c2d37",
+            "name": "libelle",
+            "dataType": {
+              "kind": "varchar",
+              "length": 120
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "1020dffb-0882-8444-8c45-7de9359ffd8a",
+            "name": "rue",
+            "dataType": {
+              "kind": "varchar",
+              "length": 200
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "1f1dd5e2-1c92-8f6d-82d1-e0302d9d832b",
+            "name": "code_postal",
+            "dataType": {
+              "kind": "varchar",
+              "length": 10
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "7edb44f3-01d4-8cac-8a57-3099c5f62a3a",
+            "name": "ville",
+            "dataType": {
+              "kind": "varchar",
+              "length": 100
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "78e97a92-578d-8397-84c2-8efcd7d8b749",
+            "name": "pays",
+            "dataType": {
+              "kind": "varchar",
+              "length": 100
+            },
+            "required": true,
+            "unique": false
+          }
+        ],
+        "identifiers": [
+          {
+            "id": "d2f21067-e346-81e0-8460-25652aba26a6",
+            "attributeIds": [
+              "9fbd8422-c17d-8bff-84f4-3f60cd8aff6d"
+            ],
+            "primary": true
+          }
+        ]
+      }
+    ],
+    "associations": [
+      {
+        "id": "43f3f23d-014a-8c0a-8e4b-53c35c267bc8",
+        "name": "REGROUPER",
+        "attributes": [],
+        "participations": [
+          {
+            "id": "c92e0328-a095-895b-8aaf-579291bc1215",
+            "entityId": "0b828905-641e-8bf4-8fe8-80e7d7745ade",
+            "role": "catégorie parente",
+            "cardinality": {
+              "min": 0,
+              "max": "N"
+            }
+          },
+          {
+            "id": "ca2e04bb-9f95-87c8-8baf-592590bc1082",
+            "entityId": "0b828905-641e-8bf4-8fe8-80e7d7745ade",
+            "role": "sous-catégorie",
+            "cardinality": {
+              "min": 0,
+              "max": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "f874a4a9-d1fd-8082-8166-5c03b65748ec",
+        "name": "CLASSER",
+        "attributes": [],
+        "participations": [
+          {
+            "id": "e7392a70-c6f7-83ff-8f52-4466a8e6c29d",
+            "entityId": "53d06ac3-b950-83d6-8eb4-eb85bb60e270",
+            "cardinality": {
+              "min": 1,
+              "max": 1
+            }
+          },
+          {
+            "id": "e8392c03-c5f7-826c-8052-45f9a7e6c10a",
+            "entityId": "0b828905-641e-8bf4-8fe8-80e7d7745ade",
+            "cardinality": {
+              "min": 0,
+              "max": "N"
+            }
+          }
+        ]
+      },
+      {
+        "id": "06d773ce-a224-8b1f-8629-4c3843c0f3d1",
+        "name": "CONTENIR",
+        "attributes": [
+          {
+            "id": "a7b6588d-81b1-8066-82ef-5a6bad3e1ecc",
+            "name": "quantite",
+            "dataType": {
+              "kind": "integer"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "c97f65d1-1b99-8494-89de-048f10da85aa",
+            "name": "prix_unitaire",
+            "dataType": {
+              "kind": "decimal",
+              "precision": 10,
+              "scale": 2
+            },
+            "required": true,
+            "unique": false,
+            "description": "Prix au moment de la commande, figé même si le tarif change ensuite."
+          }
+        ],
+        "participations": [
+          {
+            "id": "42cfe3e3-ae49-87d2-80b8-30b9e47fff58",
+            "entityId": "b4a2b46a-0246-804d-8c88-351409f8ad27",
+            "cardinality": {
+              "min": 1,
+              "max": "N"
+            }
+          },
+          {
+            "id": "41cfe250-af49-8965-8fb8-2f26e58000eb",
+            "entityId": "53d06ac3-b950-83d6-8eb4-eb85bb60e270",
+            "cardinality": {
+              "min": 0,
+              "max": "N"
+            }
+          }
+        ]
+      },
+      {
+        "id": "6a7c2de4-9e98-817d-827a-d77651a18f87",
+        "name": "PASSER",
+        "attributes": [],
+        "participations": [
+          {
+            "id": "62b79015-eca9-886c-8fdb-2273e734c96a",
+            "entityId": "b4a2b46a-0246-804d-8c88-351409f8ad27",
+            "cardinality": {
+              "min": 1,
+              "max": 1
+            }
+          },
+          {
+            "id": "61b78e82-eda9-89ff-8edb-20e0e834cafd",
+            "entityId": "65c65399-38b5-86a6-8ef0-f61f2940229c",
+            "cardinality": {
+              "min": 0,
+              "max": "N"
+            }
+          }
+        ]
+      },
+      {
+        "id": "cd63882b-ab28-865e-8699-ee4910483dec",
+        "name": "POSSEDER",
+        "attributes": [],
+        "participations": [
+          {
+            "id": "f3ed1412-1bc5-8dc7-8c0b-b8345bb9d471",
+            "entityId": "ace6d673-a978-8416-8edf-01410feaff64",
+            "cardinality": {
+              "min": 1,
+              "max": 1
+            }
+          },
+          {
+            "id": "f4ed15a5-1ac5-8c34-8d0b-b9c75ab9d2de",
+            "entityId": "65c65399-38b5-86a6-8ef0-f61f2940229c",
+            "cardinality": {
+              "min": 0,
+              "max": "N"
+            }
+          }
+        ]
+      },
+      {
+        "id": "18142972-cae9-8803-8126-ab60ec2818b9",
+        "name": "LIVRER_A",
+        "attributes": [],
+        "participations": [
+          {
+            "id": "59531d03-0b69-8932-8413-eaf5082cd444",
+            "entityId": "b4a2b46a-0246-804d-8c88-351409f8ad27",
+            "cardinality": {
+              "min": 1,
+              "max": 1
+            }
+          },
+          {
+            "id": "58531b70-0c69-8ac5-8313-e962092cd5d7",
+            "entityId": "ace6d673-a978-8416-8edf-01410feaff64",
+            "cardinality": {
+              "min": 0,
+              "max": "N"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "diagram": {
+    "nodes": [
+      {
+        "id": "338192a0-0966-8bcb-801a-5eda70e0f575",
+        "modelId": "0b828905-641e-8bf4-8fe8-80e7d7745ade",
+        "nodeType": "entity",
+        "position": {
+          "x": 80,
+          "y": 60
+        }
+      },
+      {
+        "id": "38a6b37a-5f35-8621-8138-6c34b63b33f3",
+        "modelId": "53d06ac3-b950-83d6-8eb4-eb85bb60e270",
+        "nodeType": "entity",
+        "position": {
+          "x": 80,
+          "y": 420
+        }
+      },
+      {
+        "id": "e3f40bb2-2785-86b3-8712-8a18e65de249",
+        "modelId": "65c65399-38b5-86a6-8ef0-f61f2940229c",
+        "nodeType": "entity",
+        "position": {
+          "x": 760,
+          "y": 60
+        }
+      },
+      {
+        "id": "df6d62c9-9433-8858-8cf3-86338975463a",
+        "modelId": "b4a2b46a-0246-804d-8c88-351409f8ad27",
+        "nodeType": "entity",
+        "position": {
+          "x": 760,
+          "y": 420
+        }
+      },
+      {
+        "id": "dfc75a72-de64-8ed5-8d73-e5f074e2d043",
+        "modelId": "ace6d673-a978-8416-8edf-01410feaff64",
+        "nodeType": "entity",
+        "position": {
+          "x": 1180,
+          "y": 240
+        }
+      },
+      {
+        "id": "d708ed4e-e691-854f-8ab3-470c3675d56d",
+        "modelId": "43f3f23d-014a-8c0a-8e4b-53c35c267bc8",
+        "nodeType": "association",
+        "position": {
+          "x": 420,
+          "y": 40
+        }
+      },
+      {
+        "id": "a017fe9e-c19b-82a7-8624-e828fae22a19",
+        "modelId": "f874a4a9-d1fd-8082-8166-5c03b65748ec",
+        "nodeType": "association",
+        "position": {
+          "x": 80,
+          "y": 240
+        }
+      },
+      {
+        "id": "8e33e95b-738b-824c-8d85-bc8d12eed17e",
+        "modelId": "06d773ce-a224-8b1f-8629-4c3843c0f3d1",
+        "nodeType": "association",
+        "position": {
+          "x": 420,
+          "y": 480
+        }
+      },
+      {
+        "id": "3222ad09-2adf-880a-841c-8383688d2814",
+        "modelId": "6a7c2de4-9e98-817d-827a-d77651a18f87",
+        "nodeType": "association",
+        "position": {
+          "x": 760,
+          "y": 240
+        }
+      },
+      {
+        "id": "bfde4082-7f61-8345-8ce3-f5c0725c035b",
+        "modelId": "cd63882b-ab28-865e-8699-ee4910483dec",
+        "nodeType": "association",
+        "position": {
+          "x": 1180,
+          "y": 60
+        }
+      },
+      {
+        "id": "afd6f807-6ce8-8a7c-8306-e9ed447303e2",
+        "modelId": "18142972-cae9-8803-8126-ab60ec2818b9",
+        "nodeType": "association",
+        "position": {
+          "x": 1180,
+          "y": 460
+        }
+      }
+    ],
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    },
+    "comments": []
+  },
+  "settings": {
+    "sqlDialect": "postgresql",
+    "namingConvention": "snake_case",
+    "gridEnabled": true,
+    "snapToGrid": true
+  }
+}

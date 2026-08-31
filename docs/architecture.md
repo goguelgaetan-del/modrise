@@ -54,7 +54,7 @@ src/
 │   ├── migrations/         # ProjectMigration + applyMigrations
 │   ├── export/             # to-svg.ts : rendu SVG vectoriel pur du
 │   │                       # diagramme (v0.4, voir docs/diagram-export.md)
-│   ├── examples/           # projet d'exemple « Gestion d'hôtel »
+│   ├── examples/           # projets d'exemple livrés (fabriques déterministes)
 │   └── id.ts               # génération d'identifiants
 ├── stores/                 # Zustand + Immer
 │   ├── project-store.ts    # identité du projet, modèle conceptuel, paramètres

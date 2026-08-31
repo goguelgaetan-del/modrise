@@ -6,6 +6,15 @@ Modrise est un éditeur Merise moderne, gratuit et open source, utilisable direc
 
 Modrise permet de concevoir des modèles conceptuels de données (MCD), de générer automatiquement leur modèle logique (MLD) et de produire les scripts SQL correspondants — le tout sans backend, sans compte et sans base distante : les projets sont stockés localement dans le navigateur (IndexedDB).
 
+## Documentation utilisateur
+
+Pour **utiliser** Modrise (et non le développer), commencez par le
+[guide d'utilisation](docs/guide/README.md) :
+[démarrage rapide](docs/guide/demarrage-rapide.md) (du canevas vide au SQL),
+[ce que Modrise sait modéliser](docs/guide/modelisation.md),
+[fichiers, sauvegarde et récupération](docs/guide/fichiers.md) et
+[limites connues](docs/guide/limites.md).
+
 ## Objectifs
 
 - Un éditeur Merise **local-first** : aucune donnée ne quitte le navigateur.
@@ -26,7 +35,7 @@ Modrise permet de concevoir des modèles conceptuels de données (MCD), de gén�
 - Suppression protégée : une entité référencée n'est jamais supprimée silencieusement (suppression simple ou groupée).
 - Sauvegarde automatique dans IndexedDB (statut affiché), rechargement du dernier projet.
 - Import / export `.merise.json` validé par Zod, avec messages d'erreur clairs.
-- Projet d'exemple « Gestion d'hôtel », thème clair / sombre.
+- Trois projets d'exemple livrés — « Gestion d'hôtel », « Boutique en ligne » et « Bibliothèque » —, ouvrables depuis le menu « Nouveau » et disponibles dans [examples/](examples/) ; thème clair / sombre.
 - **Annuler / rétablir** (une entrée par geste, jamais par pixel ou par frappe) avec libellé de l'action affiché sur les boutons de la barre supérieure. Voir [docs/editor-history.md](docs/editor-history.md).
 - **Presse-papiers interne** : copier / coller / dupliquer une sélection (entités, associations, commentaires), avec remappage complet des identifiants et décalage croissant à chaque collage. Voir [docs/clipboard.md](docs/clipboard.md).
 - **Sélection multiple** (rectangle ou Shift-clic) avec déplacement, suppression, duplication et copie groupés.
@@ -72,6 +81,7 @@ pnpm typecheck    # vérification TypeScript
 pnpm test         # tests unitaires (Vitest)
 pnpm test:e2e     # tests de bout en bout (Playwright)
 pnpm analyze      # build avec analyse de la taille des chunks (docs/performance.md)
+pnpm examples:export # régénérer les fichiers examples/*.merise.json
 pnpm format       # formatage Prettier
 ```
 
@@ -97,7 +107,7 @@ Principe central : **le modèle métier est la source de vérité**. React Flow 
 
 ## Format de fichier
 
-Les projets s'exportent en `.merise.json`, format JSON versionné (`formatVersion`, actuellement 3) avec pipeline d'import : lecture sans confiance → migration → validation Zod → chargement. Un fichier v1 (avant les commentaires graphiques du v0.4) ou v2 (avant le verrouillage de nœuds du v0.5) s'importe et se migre normalement, en chaînant les migrations nécessaires. Voir [docs/file-format.md](docs/file-format.md) et, pour ce qu'engage un numéro de version, [docs/versioning.md](docs/versioning.md). Un exemple complet est fourni dans [examples/gestion-hotel.merise.json](examples/gestion-hotel.merise.json).
+Les projets s'exportent en `.merise.json`, format JSON versionné (`formatVersion`, actuellement 3) avec pipeline d'import : lecture sans confiance → migration → validation Zod → chargement. Un fichier v1 (avant les commentaires graphiques du v0.4) ou v2 (avant le verrouillage de nœuds du v0.5) s'importe et se migre normalement, en chaînant les migrations nécessaires. Voir [docs/file-format.md](docs/file-format.md) et, pour ce qu'engage un numéro de version, [docs/versioning.md](docs/versioning.md). Des exemples complets sont fournis dans [examples/](examples/) ; ils sont produits par `pnpm examples:export` à partir des fabriques déterministes de `src/core/examples`, jamais édités à la main.
 
 ## Contribution
 

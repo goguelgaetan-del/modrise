@@ -4,3 +4,9 @@ playwright-report
 test-results
 pnpm-lock.yaml
 src/components/ui
+
+# Fichiers `.merise.json` produits par le sérialiseur ou figés à la main :
+# les reformater ferait échouer les tests qui les comparent à leur fabrique
+# (examples/) ou qui vérifient qu'ils n'ont pas été régénérés (fixtures).
+examples/*.merise.json
+src/tests/fixtures/formats/*.merise.json

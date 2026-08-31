@@ -42,7 +42,7 @@
 - [x] Générateur MySQL / MariaDB (règles documentées dans
       [mysql-generation.md](mysql-generation.md))
 - [x] Générateur SQLite, clés étrangères inline imposées, `PRAGMA
-    foreign_keys` (règles documentées dans
+  foreign_keys` (règles documentées dans
       [sqlite-generation.md](sqlite-generation.md)), validé réellement via
       le CLI `sqlite3`
 - [x] Sélecteur de dialecte fonctionnel dans l'interface, persisté dans
@@ -137,13 +137,25 @@ confiance qu'un utilisateur peut placer dans l'outil pour un travail réel.
       (message compréhensible, rechargement possible, export du projet
       local avant de perdre l'état), sans masquer l'erreur silencieusement
       — livré en v0.5.1 (`src/app/ErrorBoundary.tsx`)
-- [ ] Documentation utilisateur (pas seulement de développement) :
-      prise en main, notions Merise couvertes, limites connues
-- [ ] Exemples supplémentaires livrés (e-commerce, bibliothèque…) en plus
-      de la gestion d'hôtel
+- [x] Documentation utilisateur (pas seulement de développement),
+      distincte des documents de conception : [guide](guide/README.md) —
+      démarrage rapide du canevas vide jusqu'au SQL, notions Merise
+      réellement couvertes (types, identifiants simples/composés/alternatifs,
+      associations binaires/n-aires/réflexives, quatre cardinalités et leur
+      traduction en MLD), fichiers et récupération après erreur, limites
+      connues, navigateurs vérifiés et confidentialité local-first
+- [x] Exemples supplémentaires livrés : « Boutique en ligne » (association
+      réflexive avec rôles, identifiants alternatifs, ligne de commande N,N)
+      et « Bibliothèque » (association ternaire, identifiant primaire composé
+      propagé en clé étrangère composée), en plus de la gestion d'hôtel.
+      Construits par des fabriques déterministes (`src/core/examples`),
+      exportés par `pnpm examples:export`, jamais recopiés à la main ; un
+      test vérifie que les fichiers livrés correspondent aux fabriques, que
+      les trois exemples ne produisent aucun problème de validation et
+      génèrent du SQL dans les trois dialectes
 - [ ] Déploiement public (hébergement statique) et release GitHub associée
 - [x] Politique de versionnage annoncée (que signifie une version majeure,
-      mineure, corrective pour l'application *et* pour le format) —
+      mineure, corrective pour l'application _et_ pour le format) —
       [versioning.md](versioning.md), version de l'application alignée sur
       `0.5.1` dans `package.json`
 

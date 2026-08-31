@@ -133,7 +133,10 @@ test("refuse un fichier tronqué sans casser l'application", async ({ page }) =>
 test("refuse un fichier d'une version future en indiquant quoi faire", async ({ page }) => {
   const fs = await import('node:fs/promises');
   const raw = JSON.parse(
-    await fs.readFile(new URL('../src/tests/fixtures/formats/v3.merise.json', import.meta.url), 'utf8'),
+    await fs.readFile(
+      new URL('../src/tests/fixtures/formats/v3.merise.json', import.meta.url),
+      'utf8',
+    ),
   ) as { formatVersion: number };
   raw.formatVersion = 99;
 
@@ -298,4 +301,45 @@ test('l’import/export conserve le dialecte sélectionné', async ({ page }) =>
 
   await page.getByRole('tab', { name: 'SQL' }).click();
   await expect(page.getByTestId('sql-dialect-select')).toContainText('SQLite');
+});
+
+/**
+ * Les trois exemples livrés doivent s'ouvrir depuis le menu « Nouveau » et
+ * aller jusqu'au SQL sans le moindre problème de validation : ce sont les
+ * modèles sur lesquels un nouvel utilisateur juge l'outil.
+ */
+test('charge les exemples livrés jusqu’au SQL, sans problème de validation', async ({ page }) => {
+  await page.getByRole('button', { name: 'Nouveau' }).click();
+  await page.getByRole('menuitem', { name: 'Exemple : Boutique en ligne' }).click();
+  await expect(page.getByTestId('project-name-input')).toHaveValue('Boutique en ligne');
+  await expect(page.getByTestId('entity-node-PRODUIT')).toBeVisible();
+  // Association réflexive : CATEGORIE reliée à elle-même par des rôles.
+  await expect(page.getByTestId('association-node-REGROUPER')).toBeVisible();
+
+  await page.getByRole('tab', { name: 'Validation' }).click();
+  await expect(page.getByTestId('validation-panel')).toContainText('Aucun problème à afficher');
+
+  await page.getByRole('tab', { name: 'SQL' }).click();
+  // Association N,N porteuse d'attributs → table dédiée.
+  await expect(page.getByTestId('sql-code')).toContainText('CREATE TABLE "contenir"');
+
+  await page.getByRole('button', { name: 'Nouveau' }).click();
+  await page.getByRole('menuitem', { name: 'Exemple : Bibliothèque' }).click();
+  await expect(page.getByTestId('project-name-input')).toHaveValue('Bibliothèque');
+  await expect(page.getByTestId('association-node-EMPRUNTER')).toBeVisible();
+
+  await page.getByRole('tab', { name: 'Validation' }).click();
+  await expect(page.getByTestId('validation-panel')).toContainText('Aucun problème à afficher');
+
+  await page.getByRole('tab', { name: 'SQL' }).click();
+  const sql = page.getByTestId('sql-code');
+  // Association ternaire → table dédiée ; identifiant composé de RAYON →
+  // clé étrangère composée dans « ranger ».
+  await expect(sql).toContainText('CREATE TABLE "emprunter"');
+  await expect(sql).toContainText('"rayon_code_salle"');
+
+  // L'exemple de départ reste accessible.
+  await page.getByRole('button', { name: 'Nouveau' }).click();
+  await page.getByRole('menuitem', { name: "Exemple : Gestion d'hôtel" }).click();
+  await expect(page.getByTestId('entity-node-CHAMBRE')).toBeVisible();
 });
