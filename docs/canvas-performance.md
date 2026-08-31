@@ -204,9 +204,11 @@ constatée est de 85 %. Les 24,7 ms restants par événement sont
 essentiellement le plancher de Playwright déjà mesuré sur le modèle à
 3 nœuds (18,7 ms) : le grand diagramme est revenu au niveau du petit.
 
-Coût en poids de bundle : chunk principal 855,69 kB → **857,38 kB**
-(263,50 → 264,05 kB gzip), soit **+1,69 kB**, sans aucune dépendance
-ajoutée.
+Coût en poids de bundle de cette passe seule : chunk principal
+855,69 kB → **857,38 kB** (263,50 → 264,05 kB gzip), soit **+1,69 kB**,
+sans aucune dépendance ajoutée. Le cumul de toute la v0.5.1 — cette passe,
+l'instrumentation et la barrière d'erreur — est tabulé dans
+[performance.md](performance.md#analyse-du-chunk-initial-pnpm-analyze-v051).
 
 ## L'instrumentation — `src/lib/performance/diagnostics.ts`
 

@@ -20,6 +20,8 @@
  */
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
+import { downloadProjectFile } from '@/features/projects/import-export';
+import { assembleCurrentProject } from '@/stores/project-assembly';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -45,16 +47,16 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   /**
-   * Import dynamique : ces modules ne servent qu'ici, et cette barrière est
-   * montée au-dessus de tout — les charger au démarrage les placerait sur le
-   * chemin critique pour un cas qui, normalement, ne se produit jamais.
+   * Imports statiques, et c'est délibéré. Ces deux modules sont de toute façon
+   * déjà dans le chunk initial (`project-assembly` via `App`, `TopBar` et
+   * l'autosauvegarde ; `import-export` via `TopBar`) — `pnpm analyze` le
+   * confirme. Les importer dynamiquement ne déplaçait donc rien, et faisait
+   * dépendre le sauvetage d'une résolution de module survenant *après* le
+   * plantage : exactement le moment où l'on veut le moins de dépendances
+   * possible.
    */
-  private handleExport = async (): Promise<void> => {
+  private handleExport = (): void => {
     try {
-      const [{ assembleCurrentProject }, { downloadProjectFile }] = await Promise.all([
-        import('@/stores/project-assembly'),
-        import('@/features/projects/import-export'),
-      ]);
       downloadProjectFile(assembleCurrentProject());
       this.setState({ exportState: 'done' });
     } catch (error) {
@@ -97,7 +99,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <button
               type="button"
               data-testid="error-boundary-export"
-              onClick={() => void this.handleExport()}
+              onClick={this.handleExport}
               className="rounded border px-3 py-2 text-sm hover:bg-accent"
             >
               Télécharger une copie du projet
