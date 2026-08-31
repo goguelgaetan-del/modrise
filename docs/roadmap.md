@@ -120,9 +120,12 @@ confiance qu'un utilisateur peut placer dans l'outil pour un travail réel.
 
 - [x] Performance sur les grands modèles (livré en v0.5.1)
 - [ ] Engagement de compatibilité durable du format `.merise.json` :
-      politique de version documentée, migrations garanties dans les deux
-      sens de version majeure, test de non-régression par version passée
-      (v1 → v2 → v3)
+      fixtures immuables par version passée (v1, v2, v3) plutôt que des
+      anciens formats refabriqués depuis le sérialiseur courant, et test de
+      stabilité après réexport/réimport. La politique elle-même est
+      documentée dans [versioning.md](versioning.md) — les migrations sont
+      **montantes uniquement**, ce qui est une limite assumée et non un
+      engagement dans les deux sens
 - [ ] Robustesse de l'import/export : fichier tronqué, JSON invalide,
       version future inconnue, très gros fichier — message clair dans
       chaque cas, jamais d'écran blanc
@@ -135,8 +138,10 @@ confiance qu'un utilisateur peut placer dans l'outil pour un travail réel.
 - [ ] Exemples supplémentaires livrés (e-commerce, bibliothèque…) en plus
       de la gestion d'hôtel
 - [ ] Déploiement public (hébergement statique) et release GitHub associée
-- [ ] Politique de versionnage annoncée (que signifie une version majeure,
-      mineure, corrective pour l'application *et* pour le format)
+- [x] Politique de versionnage annoncée (que signifie une version majeure,
+      mineure, corrective pour l'application *et* pour le format) —
+      [versioning.md](versioning.md), version de l'application alignée sur
+      `0.5.1` dans `package.json`
 
 ### Non bloquants
 

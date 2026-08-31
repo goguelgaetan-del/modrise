@@ -97,7 +97,7 @@ Principe central : **le modèle métier est la source de vérité**. React Flow 
 
 ## Format de fichier
 
-Les projets s'exportent en `.merise.json`, format JSON versionné (`formatVersion`, actuellement 3) avec pipeline d'import : lecture sans confiance → migration → validation Zod → chargement. Un fichier v1 (avant les commentaires graphiques du v0.4) ou v2 (avant le verrouillage de nœuds du v0.5) s'importe et se migre normalement, en chaînant les migrations nécessaires. Voir [docs/file-format.md](docs/file-format.md). Un exemple complet est fourni dans [examples/gestion-hotel.merise.json](examples/gestion-hotel.merise.json).
+Les projets s'exportent en `.merise.json`, format JSON versionné (`formatVersion`, actuellement 3) avec pipeline d'import : lecture sans confiance → migration → validation Zod → chargement. Un fichier v1 (avant les commentaires graphiques du v0.4) ou v2 (avant le verrouillage de nœuds du v0.5) s'importe et se migre normalement, en chaînant les migrations nécessaires. Voir [docs/file-format.md](docs/file-format.md) et, pour ce qu'engage un numéro de version, [docs/versioning.md](docs/versioning.md). Un exemple complet est fourni dans [examples/gestion-hotel.merise.json](examples/gestion-hotel.merise.json).
 
 ## Contribution
 

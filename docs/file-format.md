@@ -101,3 +101,6 @@ message invitant à mettre Modrise à jour.
   interprétés.
 - L'ordre des tableaux est significatif (ordre des attributs, des
   participations).
+- La politique de version — ce que `formatVersion` engage, et pourquoi les
+  migrations ne vont que vers l'avant — est décrite dans
+  [versioning.md](versioning.md).

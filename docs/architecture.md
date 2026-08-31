@@ -174,8 +174,8 @@ SqlDialect sélectionné → SQL`) et n'est jamais persisté. Chaque dialecte
   le même pipeline parse → migration → validation Zod.
 - **Fonctionnalités à venir affichées honnêtement** : toute fonctionnalité
   non implémentée est présentée comme « Fonctionnalité prévue dans une
-  prochaine version » (seul le bouton Paramètres l'est encore en v0.4),
-  jamais simulée.
+  prochaine version », jamais simulée. Vérifié en v0.5.1 : le bouton
+  Paramètres de `TopBar` est le seul élément encore dans ce cas.
 - **Historique par instantanés, pas par commandes inverses** : l'annuler/
   rétablir (v0.4) compare des instantanés structurés du modèle et du
   diagramme plutôt que d'enregistrer une commande et son inverse par action
