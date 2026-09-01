@@ -65,11 +65,22 @@ Sur le projet d'exemple **et** sur un modèle importé :
 
 ## 7. Publication
 
+Procédure détaillée : [deployment.md](deployment.md).
+
 - [ ] Numéro de version décidé selon la politique de versionnage annoncée
+      ([versioning.md](versioning.md)), reportée dans `package.json`
+- [ ] `pnpm verify:static` passe — build sous-répertoire servi et parcouru
+      dans Chromium, sans requête en échec ni erreur de console
+- [ ] GitHub Pages activé avec la source **GitHub Actions** (une seule fois
+      dans la vie du dépôt)
+- [ ] CI et E2E **vertes sur `main`** avant de poser l'étiquette : le
+      workflow de déploiement ne les rejoue pas et publierait quand même
 - [ ] Étiquette Git posée sur le commit de `main` réellement testé
 - [ ] Release GitHub créée, avec les notes de version
-- [ ] Déploiement statique effectué, puis **vérifié dans un navigateur** :
-      l'application se charge, crée un projet, sauvegarde et recharge
+- [ ] Déploiement statique effectué, puis **vérifié dans un navigateur sur
+      l'URL publique** : l'application se charge, crée un projet, sauvegarde,
+      recharge, ouvre un exemple et génère du SQL
+- [ ] URL publique renseignée dans `About` du dépôt et dans `README.md`
 
 ## Règle
 

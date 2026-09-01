@@ -18,7 +18,8 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "analyze": "ANALYZE=1 vite build",
-    "examples:export": "node scripts/export-examples.mjs"
+    "examples:export": "node scripts/export-examples.mjs",
+    "verify:static": "node scripts/verify-static-build.mjs"
   },
   "dependencies": {
     "@dagrejs/dagre": "^3.0.0",
