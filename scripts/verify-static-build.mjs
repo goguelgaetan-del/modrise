@@ -71,7 +71,8 @@ async function expectValue(page, testId, expected, timeout = 15_000) {
 
 /**
  * Parcours commun au build local et au site publié : charger, créer un projet,
- * le retrouver après rechargement, atteindre le SQL, avoir une icône.
+ * le retrouver après rechargement, atteindre le SQL, faire l'aller-retour
+ * export/réimport d'un `.merise.json`, avoir une icône.
  */
 async function runJourney(page, url, problems) {
   process.stdout.write(`Vérification de ${url}…\n`);
@@ -97,7 +98,27 @@ async function runJourney(page, url, problems) {
   await page.getByRole('tab', { name: 'SQL' }).click();
   await expectVisible(page, 'sql-code');
 
-  // 4. L'icône déclarée dans `index.html` doit exister sous la base.
+  // 4. L'aller-retour d'un fichier : c'est le seul geste qui sort du bac à
+  //    sable de la page — un téléchargement puis une lecture par `File`. Il
+  //    dépend donc de l'origine réellement servie, pas seulement du bundle.
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByTestId('export-button').click(),
+  ]);
+  const exportedPath = await download.path();
+  if (!download.suggestedFilename().endsWith('.merise.json')) {
+    problems.push(`export nommé « ${download.suggestedFilename()} », attendu *.merise.json`);
+  }
+
+  await page.getByRole('button', { name: 'Nouveau' }).click();
+  await page.getByRole('menuitem', { name: 'Projet vide' }).click();
+  await expectValue(page, 'project-name-input', 'Projet sans titre');
+
+  await page.getByTestId('import-file-input').setInputFiles(exportedPath);
+  await expectValue(page, 'project-name-input', 'Bibliothèque');
+  await expectVisible(page, 'entity-node-LIVRE');
+
+  // 5. L'icône déclarée dans `index.html` doit exister sous la base.
   const favicon = await page.request.get(new URL('favicon.svg', url).toString());
   if (!favicon.ok()) problems.push(`favicon absent : HTTP ${String(favicon.status())}`);
 }

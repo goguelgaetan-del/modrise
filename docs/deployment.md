@@ -53,7 +53,9 @@ Chromium :
    qu'IndexedDB fonctionne sur l'origine réellement servie ;
 4. l'onglet SQL est ouvert, ce qui force le chargement des morceaux
    découpés dynamiquement ;
-5. le favicon est demandé sous la base.
+5. le projet est exporté en `.merise.json`, puis réimporté dans un projet
+   vide — le seul geste qui sorte du bac à sable de la page ;
+6. le favicon est demandé sous la base.
 
 Toute requête en échec, toute réponse `>= 400` et toute erreur de console font
 échouer le script : un asset introuvable ne passe pas inaperçu au prétexte que
@@ -122,11 +124,9 @@ pnpm verify:static --url https://goguelgaetan-del.github.io/modrise/
 
 Le script rejoue sur l'URL publique le parcours décrit plus haut — chargement,
 ouverture d'un exemple, rechargement qui retrouve le projet, onglet SQL,
-favicon — et échoue sur toute requête perdue ou erreur de console. Il a été
-exécuté avec succès sur le commit étiqueté `v1.0.0`.
-
-Restent à faire à la main, parce qu'ils passent par le gestionnaire de
-téléchargements du navigateur : l'export `.merise.json` puis son réimport.
+aller-retour export/réimport, favicon — et échoue sur toute requête perdue ou
+erreur de console. Il a été exécuté avec succès sur le site publié de la
+v1.0.0.
 
 ## Autre hébergeur
 
