@@ -9,6 +9,7 @@ import {
   createParticipation,
 } from '@/core/conceptual-model/factories';
 import type { ConceptualModel } from '@/core/conceptual-model/types';
+import type { DiagramComment, DiagramModel, DiagramNode } from '@/core/diagram/types';
 
 /** CLIENT (0,N) — EFFECTUER — (1,1) COMMANDE : relation 1,N classique. */
 export function oneToManyModel(): ConceptualModel {
@@ -241,4 +242,70 @@ export function largeModel(options: LargeModelOptions = {}): ConceptualModel {
   });
 
   return { entities, associations };
+}
+
+export interface LargeDiagramOptions {
+  /** Nombre de colonnes de la grille de placement initial. */
+  columns?: number;
+  /** Pas horizontal/vertical entre deux nœuds, en pixels. */
+  spacing?: number;
+  /** Nombre de commentaires graphiques ajoutés au diagramme. */
+  commentCount?: number;
+}
+
+/**
+ * Diagramme déterministe correspondant à un `largeModel()` : un nœud par
+ * entité et par association, disposés en grille, plus quelques commentaires
+ * graphiques. Sert aux mesures de performance du glisser-déposer (v0.5.1,
+ * voir docs/canvas-performance.md) : environ 250 nœuds et plusieurs
+ * centaines d'arêtes de participation.
+ */
+export function largeDiagram(
+  model: ConceptualModel,
+  options: LargeDiagramOptions = {},
+): DiagramModel {
+  const columns = options.columns ?? 16;
+  const spacing = options.spacing ?? 320;
+  const commentCount = options.commentCount ?? 4;
+
+  const nodes: DiagramNode[] = [];
+  const comments: DiagramComment[] = [];
+  let index = 0;
+  const place = () => {
+    const position = {
+      x: (index % columns) * spacing,
+      y: Math.floor(index / columns) * spacing,
+    };
+    index += 1;
+    return position;
+  };
+
+  for (const entity of model.entities) {
+    nodes.push({
+      id: `node-entity-${entity.id}`,
+      modelId: entity.id,
+      nodeType: 'entity',
+      position: place(),
+    });
+  }
+  for (const association of model.associations) {
+    nodes.push({
+      id: `node-association-${association.id}`,
+      modelId: association.id,
+      nodeType: 'association',
+      position: place(),
+    });
+  }
+  for (let c = 0; c < commentCount; c += 1) {
+    const commentId = `comment-${c}`;
+    comments.push({ id: commentId, text: `Commentaire ${c}` });
+    nodes.push({
+      id: `node-comment-${commentId}`,
+      modelId: commentId,
+      nodeType: 'comment',
+      position: place(),
+    });
+  }
+
+  return { nodes, viewport: { x: 0, y: 0, zoom: 1 }, comments };
 }

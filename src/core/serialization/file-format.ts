@@ -47,6 +47,47 @@ export type ProjectFile = z.infer<typeof projectFileSchema>;
 
 export class FileFormatError extends Error {}
 
+/**
+ * Limite de taille d'un fichier importable, en octets.
+ *
+ * Elle existe pour transformer un cas pathologique en message clair plutôt
+ * qu'en onglet figé : `File.text()` charge tout le contenu en mémoire d'un
+ * coup, et `JSON.parse` en construit ensuite une seconde représentation.
+ *
+ * Le chiffre est calibré, pas arbitraire. Le projet d'exemple pèse 8 Kio
+ * sérialisé, et le plus grand modèle que Modrise revendique (100 entités,
+ * 150 associations, 250 nœuds — voir docs/performance.md) pèse 356 Kio.
+ * 16 Mio laisse donc une marge d'environ 46× au-dessus de ce plafond
+ * documenté, tout en restant très en dessous de ce qui bloquerait un
+ * navigateur.
+ */
+export const MAX_PROJECT_FILE_BYTES = 16 * 1024 * 1024;
+
+/** Formate une taille en octets pour un message destiné à un humain. */
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${String(bytes)} o`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Kio`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} Mio`;
+}
+
+/**
+ * Vérifie qu'un fichier est importable **avant** d'en lire le contenu.
+ *
+ * Règle métier pure : elle ne dépend ni du DOM ni de `File`, seulement d'un
+ * nombre d'octets. La couche navigateur (`features/projects`) l'appelle avec
+ * `file.size`, qui est connu sans avoir rien lu.
+ */
+export function assertImportableSize(byteSize: number): void {
+  if (byteSize === 0) {
+    throw new FileFormatError('Ce fichier est vide.');
+  }
+  if (byteSize > MAX_PROJECT_FILE_BYTES) {
+    throw new FileFormatError(
+      `Ce fichier fait ${formatFileSize(byteSize)}, au-delà de la limite d'import de ${formatFileSize(MAX_PROJECT_FILE_BYTES)}. Il ne ressemble pas à un projet Modrise.`,
+    );
+  }
+}
+
 export function serializeProject(project: ModriseProject): string {
   const file: ProjectFile = {
     formatVersion: project.formatVersion,
@@ -99,6 +140,12 @@ export function parseProjectFile(content: string): ModriseProject {
  * ancien ou d'une version future de Modrise).
  */
 export function parseProjectFileWithWarnings(content: string): ParsedProjectFile {
+  // Un fichier vide est un cas assez courant (téléchargement interrompu,
+  // fichier créé mais jamais écrit) pour mériter mieux que « JSON invalide ».
+  if (content.trim().length === 0) {
+    throw new FileFormatError('Ce fichier est vide.');
+  }
+
   let raw: unknown;
   try {
     raw = JSON.parse(content);

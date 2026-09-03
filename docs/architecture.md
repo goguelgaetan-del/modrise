@@ -24,6 +24,9 @@ src/
 │   │                       # fabriques et opérations pures
 │   ├── diagram/            # DiagramModel : nœuds (positions, verrouillage
 │   │                       # v0.5), viewport, commentaires (v0.4) ;
+│   │                       # drag-transaction.ts : état transitoire d'un
+│   │                       # déplacement en cours (v0.5.1, voir
+│   │                       # docs/canvas-performance.md) ;
 │   │                       # geometry.ts (centre/bord d'un nœud), bounds.ts
 │   │                       # (rectangle englobant), align.ts (alignement/
 │   │                       # distribution purs, v0.5)
@@ -51,13 +54,16 @@ src/
 │   ├── migrations/         # ProjectMigration + applyMigrations
 │   ├── export/             # to-svg.ts : rendu SVG vectoriel pur du
 │   │                       # diagramme (v0.4, voir docs/diagram-export.md)
-│   ├── examples/           # projet d'exemple « Gestion d'hôtel »
+│   ├── examples/           # projets d'exemple livrés (fabriques déterministes)
 │   └── id.ts               # génération d'identifiants
 ├── stores/                 # Zustand + Immer
 │   ├── project-store.ts    # identité du projet, modèle conceptuel, paramètres
 │   ├── diagram-store.ts    # positions, viewport, commentaires, sélection
 │   │                       # (sélection non persistée), verrouillage de
-│   │                       # nœuds (v0.5 — `moveNode` ignore un nœud verrouillé)
+│   │                       # nœuds (v0.5 — `moveNode` ignore un nœud
+│   │                       # verrouillé) ; `moveNodes` applique un
+│   │                       # déplacement groupé en une seule notification
+│   │                       # (v0.5.1)
 │   ├── history-store.ts    # annuler/rétablir (v0.4, voir
 │   │                       # docs/editor-history.md)
 │   ├── clipboard-store.ts  # presse-papiers interne (v0.4, voir
@@ -89,9 +95,14 @@ src/
 │   ├── logical-model/      # useLogicalModel (hook dérivé mémoïsé), panneau MLD
 │   ├── sql-preview/        # useSqlGeneration, panneau SQL (sélecteur de
 │   │                       # dialecte, aperçu, copier, télécharger)
-│   └── projects/           # import / export de fichiers, nouveau projet
+│   ├── projects/           # import / export de fichiers, nouveau projet
+│   └── diagnostics/        # PerformanceDebugPanel (développement seul,
+│                           # ?debugPerformance=1, v0.5.1)
 ├── lib/                    # use-media-query.ts (points de rupture
-│                           # responsive, v0.5, voir docs/responsive-layout.md)
+│                           # responsive, v0.5, voir docs/responsive-layout.md) ;
+│                           # performance/diagnostics.ts (instrumentation
+│                           # locale de développement, v0.5.1, voir
+│                           # docs/canvas-performance.md)
 ├── components/
 │   ├── layout/             # TopBar, SidebarLeft, InspectorPanel, BottomPanel,
 │   │                       # StatusBar (v0.5), InspectorDrawer et
@@ -99,7 +110,9 @@ src/
 │   │                       # redimensionnables via react-resizable-panels
 │   ├── common/             # éditeurs partagés, notifications
 │   └── ui/                 # composants shadcn/ui générés
-└── app/                    # App, providers (React Flow, tooltips, thème)
+└── app/                    # App, providers (React Flow, tooltips, thème),
+                            # ErrorBoundary (montée au-dessus de App dans
+                            # main.tsx, v0.5.1)
 ```
 
 ## Flux de données
@@ -161,8 +174,8 @@ SqlDialect sélectionné → SQL`) et n'est jamais persisté. Chaque dialecte
   le même pipeline parse → migration → validation Zod.
 - **Fonctionnalités à venir affichées honnêtement** : toute fonctionnalité
   non implémentée est présentée comme « Fonctionnalité prévue dans une
-  prochaine version » (seul le bouton Paramètres l'est encore en v0.4),
-  jamais simulée.
+  prochaine version », jamais simulée. Vérifié en v0.5.1 : le bouton
+  Paramètres de `TopBar` est le seul élément encore dans ce cas.
 - **Historique par instantanés, pas par commandes inverses** : l'annuler/
   rétablir (v0.4) compare des instantanés structurés du modèle et du
   diagramme plutôt que d'enregistrer une commande et son inverse par action

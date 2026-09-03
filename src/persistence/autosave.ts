@@ -10,6 +10,7 @@ import { assembleCurrentProject } from '@/stores/project-assembly';
 import { selectPersistedDiagram, useDiagramStore } from '@/stores/diagram-store';
 import { useProjectStore } from '@/stores/project-store';
 import { useUiStore } from '@/stores/ui-store';
+import { countEvent } from '@/lib/performance/diagnostics';
 import { saveProject, setLastOpenedProjectId } from './project-repository';
 
 export const AUTOSAVE_DEBOUNCE_MS = 800;
@@ -31,6 +32,7 @@ export async function withAutosaveSuspended(action: () => void | Promise<void>):
 
 async function persistNow(): Promise<void> {
   const ui = useUiStore.getState();
+  countEvent('autosave');
   ui.setSaveStatus('saving');
   try {
     const project = assembleCurrentProject();

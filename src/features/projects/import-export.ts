@@ -4,6 +4,8 @@
  */
 import type { ModriseProject } from '@/core/project/types';
 import {
+  assertImportableSize,
+  FileFormatError,
   parseProjectFileWithWarnings,
   PROJECT_FILE_EXTENSION,
   serializeProject,
@@ -30,8 +32,28 @@ export function downloadProjectFile(project: ModriseProject): void {
  * Lit et valide un fichier importé ; lève `FileFormatError` en cas de problème.
  * `warnings` signale les champs invalides silencieusement remplacés par une
  * valeur par défaut (ex. dialecte SQL inconnu → PostgreSQL).
+ *
+ * Trois barrières, dans cet ordre :
+ *
+ * 1. la taille, vérifiée **avant** toute lecture — `file.size` est connu sans
+ *    rien charger, alors que `file.text()` matérialise tout en mémoire ;
+ * 2. la lecture elle-même, qui peut échouer pour des raisons hors du format
+ *    (fichier supprimé ou déplacé depuis la sélection, permission refusée,
+ *    support amovible retiré) et doit devenir un message, jamais une promesse
+ *    rejetée que l'appelant ne saurait pas nommer ;
+ * 3. le format, délégué au noyau.
  */
 export async function readProjectFile(file: File): Promise<ParsedProjectFile> {
-  const content = await file.text();
+  assertImportableSize(file.size);
+
+  let content: string;
+  try {
+    content = await file.text();
+  } catch {
+    throw new FileFormatError(
+      "Ce fichier n'a pas pu être lu. Vérifiez qu'il est toujours accessible, puis réessayez.",
+    );
+  }
+
   return parseProjectFileWithWarnings(content);
 }

@@ -1,7 +1,7 @@
 {
   "name": "modrise",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.5.1",
   "description": "Modrise est un éditeur Merise moderne permettant de concevoir des modèles conceptuels de données, de générer automatiquement leur modèle logique et de produire les scripts SQL correspondants.",
   "license": "AGPL-3.0-only",
   "type": "module",
@@ -17,7 +17,9 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "analyze": "ANALYZE=1 vite build"
+    "analyze": "ANALYZE=1 vite build",
+    "examples:export": "node scripts/export-examples.mjs",
+    "verify:static": "node scripts/verify-static-build.mjs"
   },
   "dependencies": {
     "@dagrejs/dagre": "^3.0.0",

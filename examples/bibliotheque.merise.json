@@ -1,0 +1,651 @@
+{
+  "formatVersion": 3,
+  "project": {
+    "id": "d811d932-3a91-86df-82e0-c6f8af709eed",
+    "name": "Bibliothèque",
+    "description": "Projet d'exemple : œuvres, exemplaires physiques, emprunts et réservations. Montre une association ternaire et un identifiant primaire composé.",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "updatedAt": "2026-01-01T00:00:00.000Z"
+  },
+  "conceptualModel": {
+    "entities": [
+      {
+        "id": "1fc3ff91-2358-8848-803c-5d8b3a312aca",
+        "name": "AUTEUR",
+        "attributes": [
+          {
+            "id": "07721555-de68-8b52-8d8c-5f0375902448",
+            "name": "id_auteur",
+            "dataType": {
+              "kind": "integer"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "4a5c06fb-7e45-84c8-81b8-e599e444a9e6",
+            "name": "nom",
+            "dataType": {
+              "kind": "varchar",
+              "length": 100
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "d46d57ee-8857-895b-8fe4-284c5331a9a9",
+            "name": "prenom",
+            "dataType": {
+              "kind": "varchar",
+              "length": 100
+            },
+            "required": false,
+            "unique": false
+          },
+          {
+            "id": "18739206-98a0-8a61-8d81-2ecc0bd8c92f",
+            "name": "annee_naissance",
+            "dataType": {
+              "kind": "integer"
+            },
+            "required": false,
+            "unique": false
+          }
+        ],
+        "identifiers": [
+          {
+            "id": "196ba161-94a9-89e6-8385-365bc6e96aa0",
+            "attributeIds": [
+              "07721555-de68-8b52-8d8c-5f0375902448"
+            ],
+            "primary": true
+          }
+        ]
+      },
+      {
+        "id": "0ac0c0c3-e120-8b8c-8c79-bbe5083dc626",
+        "name": "LIVRE",
+        "description": "L'œuvre, indépendamment du nombre d'exemplaires détenus.",
+        "attributes": [
+          {
+            "id": "c50aa54b-3aa1-8afc-82df-96594c56c582",
+            "name": "id_livre",
+            "dataType": {
+              "kind": "integer"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "4649b0cb-9bb8-85f0-849c-4629a140b536",
+            "name": "isbn",
+            "dataType": {
+              "kind": "varchar",
+              "length": 17
+            },
+            "required": true,
+            "unique": true
+          },
+          {
+            "id": "7d9ce821-dbd5-8c84-86ad-afbbe7713686",
+            "name": "titre",
+            "dataType": {
+              "kind": "varchar",
+              "length": 200
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "0067c43d-b1e2-8bf4-8cd7-6a0fe6d36016",
+            "name": "annee_publication",
+            "dataType": {
+              "kind": "integer"
+            },
+            "required": false,
+            "unique": false
+          },
+          {
+            "id": "7cc3a665-895b-869a-8fd1-64a78748414c",
+            "name": "langue",
+            "dataType": {
+              "kind": "varchar",
+              "length": 40
+            },
+            "required": true,
+            "unique": false
+          }
+        ],
+        "identifiers": [
+          {
+            "id": "3c8b882b-7058-808a-8f8a-e24d76c1d5bc",
+            "attributeIds": [
+              "c50aa54b-3aa1-8afc-82df-96594c56c582"
+            ],
+            "primary": true
+          },
+          {
+            "id": "4f8ccb66-ce1d-8c41-8d68-30208cb2c7cb",
+            "name": "isbn_unique",
+            "attributeIds": [
+              "4649b0cb-9bb8-85f0-849c-4629a140b536"
+            ],
+            "primary": false
+          }
+        ]
+      },
+      {
+        "id": "d92a3b03-a48c-88aa-8472-d77d70ee87ec",
+        "name": "EXEMPLAIRE",
+        "description": "Un livre physique posé sur une étagère ; c’est lui que l’on emprunte.",
+        "attributes": [
+          {
+            "id": "f303e465-c71c-8552-8c8f-9dcbc4f4e8e0",
+            "name": "id_exemplaire",
+            "dataType": {
+              "kind": "integer"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "5a22ff5f-706f-87a6-8fd8-9e716184b620",
+            "name": "code_barre",
+            "dataType": {
+              "kind": "varchar",
+              "length": 20
+            },
+            "required": true,
+            "unique": true
+          },
+          {
+            "id": "985a8215-631f-8dd4-8b79-7faf345495a6",
+            "name": "etat",
+            "dataType": {
+              "kind": "varchar",
+              "length": 20
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "4dc25a19-8fe8-8170-8648-22af85b43536",
+            "name": "date_acquisition",
+            "dataType": {
+              "kind": "date"
+            },
+            "required": true,
+            "unique": false
+          }
+        ],
+        "identifiers": [
+          {
+            "id": "49066273-7db2-8958-8537-1e5d1afcf832",
+            "attributeIds": [
+              "f303e465-c71c-8552-8c8f-9dcbc4f4e8e0"
+            ],
+            "primary": true
+          },
+          {
+            "id": "e747d7b0-af95-8d71-851c-8c56074575af",
+            "name": "code_barre_unique",
+            "attributeIds": [
+              "5a22ff5f-706f-87a6-8fd8-9e716184b620"
+            ],
+            "primary": false
+          }
+        ]
+      },
+      {
+        "id": "8be726e8-2e2f-8363-8694-6d2e9890aec9",
+        "name": "RAYON",
+        "description": "Emplacement physique, identifié par le couple (salle, numéro).",
+        "attributes": [
+          {
+            "id": "a03d95df-0e0d-815c-8845-a5659d26a852",
+            "name": "code_salle",
+            "dataType": {
+              "kind": "varchar",
+              "length": 10
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "461ba680-d82d-8837-8a55-1c1a8d7634e9",
+            "name": "numero_rayon",
+            "dataType": {
+              "kind": "integer"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "1f53a4d3-d088-8ffe-8720-1f156c299650",
+            "name": "theme",
+            "dataType": {
+              "kind": "varchar",
+              "length": 100
+            },
+            "required": true,
+            "unique": false
+          }
+        ],
+        "identifiers": [
+          {
+            "id": "04fcd462-89ea-8027-8bb3-02c0e5a9b59d",
+            "attributeIds": [
+              "a03d95df-0e0d-815c-8845-a5659d26a852",
+              "461ba680-d82d-8837-8a55-1c1a8d7634e9"
+            ],
+            "primary": true
+          }
+        ]
+      },
+      {
+        "id": "8caed082-5015-8e47-80de-fa98cb5e10fd",
+        "name": "ADHERENT",
+        "attributes": [
+          {
+            "id": "6d7f63e5-6d8b-8a7a-859e-6e6b7fcd7e08",
+            "name": "id_adherent",
+            "dataType": {
+              "kind": "integer"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "6e5a1b7c-a64b-81a9-81bb-8ab2eff23faf",
+            "name": "numero_carte",
+            "dataType": {
+              "kind": "varchar",
+              "length": 20
+            },
+            "required": true,
+            "unique": true
+          },
+          {
+            "id": "17734e68-8d55-80b7-8764-a6fa1d1e6c21",
+            "name": "nom",
+            "dataType": {
+              "kind": "varchar",
+              "length": 100
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "28b70b7b-d0ac-809a-8862-f83d92617c04",
+            "name": "prenom",
+            "dataType": {
+              "kind": "varchar",
+              "length": 100
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "52617308-2b04-853b-8e3e-44bad9f48d95",
+            "name": "date_adhesion",
+            "dataType": {
+              "kind": "date"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "ed5023ab-e3d7-88b6-8026-95d115a474d4",
+            "name": "courriel",
+            "dataType": {
+              "kind": "varchar",
+              "length": 255
+            },
+            "required": false,
+            "unique": false
+          }
+        ],
+        "identifiers": [
+          {
+            "id": "d2dae86c-ba73-8b4b-8fab-dbaa66d49601",
+            "attributeIds": [
+              "6d7f63e5-6d8b-8a7a-859e-6e6b7fcd7e08"
+            ],
+            "primary": true
+          },
+          {
+            "id": "619cb385-0e2b-8a68-850d-59af261c04f2",
+            "name": "numero_carte_unique",
+            "attributeIds": [
+              "6e5a1b7c-a64b-81a9-81bb-8ab2eff23faf"
+            ],
+            "primary": false
+          }
+        ]
+      },
+      {
+        "id": "611e8547-ede0-873e-8dfa-544905d3d978",
+        "name": "BIBLIOTHECAIRE",
+        "attributes": [
+          {
+            "id": "f6cb2a3d-45c3-8bfa-8d32-12f34aef8548",
+            "name": "id_bibliothecaire",
+            "dataType": {
+              "kind": "integer"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "64b0b7f5-645d-87a2-8658-13abd0d3d5c0",
+            "name": "nom",
+            "dataType": {
+              "kind": "varchar",
+              "length": 100
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "4305aa68-ed5c-8a75-86e9-20be4e0085c3",
+            "name": "prenom",
+            "dataType": {
+              "kind": "varchar",
+              "length": 100
+            },
+            "required": true,
+            "unique": false
+          }
+        ],
+        "identifiers": [
+          {
+            "id": "8696ac27-bd5a-82ec-89f2-fef9b9e2271e",
+            "attributeIds": [
+              "f6cb2a3d-45c3-8bfa-8d32-12f34aef8548"
+            ],
+            "primary": true
+          }
+        ]
+      }
+    ],
+    "associations": [
+      {
+        "id": "f65ea851-9993-878a-8e71-9ba38effcbcc",
+        "name": "ECRIRE",
+        "attributes": [],
+        "participations": [
+          {
+            "id": "25e0e7e8-991c-8b8f-8f08-8ca60c3f8d25",
+            "entityId": "1fc3ff91-2358-8848-803c-5d8b3a312aca",
+            "cardinality": {
+              "min": 0,
+              "max": "N"
+            }
+          },
+          {
+            "id": "26e0e97b-981c-89fc-8008-8e390b3f8b92",
+            "entityId": "0ac0c0c3-e120-8b8c-8c79-bbe5083dc626",
+            "cardinality": {
+              "min": 1,
+              "max": "N"
+            }
+          }
+        ]
+      },
+      {
+        "id": "7115ce85-978c-8a50-8ebe-612f8b0b5ea2",
+        "name": "EXEMPLAIRE_DE",
+        "attributes": [],
+        "participations": [
+          {
+            "id": "93647be4-e627-8bd1-833a-3d423a9cfe9f",
+            "entityId": "d92a3b03-a48c-88aa-8472-d77d70ee87ec",
+            "cardinality": {
+              "min": 1,
+              "max": 1
+            }
+          },
+          {
+            "id": "94647d77-e527-8a3e-843a-3ed5399cfd0c",
+            "entityId": "0ac0c0c3-e120-8b8c-8c79-bbe5083dc626",
+            "cardinality": {
+              "min": 0,
+              "max": "N"
+            }
+          }
+        ]
+      },
+      {
+        "id": "2393a820-92ba-8297-83c5-6fce3cd7b0cd",
+        "name": "RANGER",
+        "attributes": [],
+        "participations": [
+          {
+            "id": "5741accd-37bc-886e-803f-0fff1c804bf0",
+            "entityId": "d92a3b03-a48c-88aa-8472-d77d70ee87ec",
+            "cardinality": {
+              "min": 1,
+              "max": 1
+            }
+          },
+          {
+            "id": "5641ab3a-38bc-8a01-8f3f-0e6c1d804d83",
+            "entityId": "8be726e8-2e2f-8363-8694-6d2e9890aec9",
+            "cardinality": {
+              "min": 0,
+              "max": "N"
+            }
+          }
+        ]
+      },
+      {
+        "id": "5a4cc42d-d20c-8068-8f95-e9dbc797025e",
+        "name": "EMPRUNTER",
+        "attributes": [
+          {
+            "id": "d14391d9-a6d3-84b6-8ca1-3c7311d3ac60",
+            "name": "date_emprunt",
+            "dataType": {
+              "kind": "date"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "13b2985b-55fc-888c-8948-4e65de8c45c6",
+            "name": "date_retour_prevue",
+            "dataType": {
+              "kind": "date"
+            },
+            "required": true,
+            "unique": false
+          },
+          {
+            "id": "f572c281-973b-861c-8410-61c772287f8a",
+            "name": "date_retour_effective",
+            "dataType": {
+              "kind": "date"
+            },
+            "required": false,
+            "unique": false,
+            "description": "Vide tant que le livre n’est pas revenu."
+          }
+        ],
+        "participations": [
+          {
+            "id": "85cdf378-8493-8f55-833b-4b2a75e98a97",
+            "entityId": "d92a3b03-a48c-88aa-8472-d77d70ee87ec",
+            "cardinality": {
+              "min": 0,
+              "max": "N"
+            }
+          },
+          {
+            "id": "86cdf50b-8393-8dc2-843b-4cbd74e98904",
+            "entityId": "8caed082-5015-8e47-80de-fa98cb5e10fd",
+            "cardinality": {
+              "min": 0,
+              "max": "N"
+            }
+          },
+          {
+            "id": "87cdf69e-8293-8c2f-813b-480477e98dbd",
+            "entityId": "611e8547-ede0-873e-8dfa-544905d3d978",
+            "cardinality": {
+              "min": 0,
+              "max": "N"
+            }
+          }
+        ]
+      },
+      {
+        "id": "cf17943b-d63e-8354-8e37-d935da792746",
+        "name": "RESERVER",
+        "attributes": [
+          {
+            "id": "63d33aa2-ad2d-81f3-8c62-96f8c4bb9b49",
+            "name": "date_reservation",
+            "dataType": {
+              "kind": "datetime"
+            },
+            "required": true,
+            "unique": false
+          }
+        ],
+        "participations": [
+          {
+            "id": "35f977e6-dc86-8535-8d66-5b9cec60bb1b",
+            "entityId": "8caed082-5015-8e47-80de-fa98cb5e10fd",
+            "cardinality": {
+              "min": 0,
+              "max": "N"
+            }
+          },
+          {
+            "id": "36f97979-db86-83a2-8e66-5d2feb60b988",
+            "entityId": "0ac0c0c3-e120-8b8c-8c79-bbe5083dc626",
+            "cardinality": {
+              "min": 0,
+              "max": "N"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "diagram": {
+    "nodes": [
+      {
+        "id": "31a18ef4-47ac-8b4f-8019-80ee88c457b9",
+        "modelId": "1fc3ff91-2358-8848-803c-5d8b3a312aca",
+        "nodeType": "entity",
+        "position": {
+          "x": 80,
+          "y": 80
+        }
+      },
+      {
+        "id": "4dd0dec8-80bb-89d9-805e-faea85631cfb",
+        "modelId": "0ac0c0c3-e120-8b8c-8c79-bbe5083dc626",
+        "nodeType": "entity",
+        "position": {
+          "x": 760,
+          "y": 80
+        }
+      },
+      {
+        "id": "922310ce-20b7-8679-8e3e-26186fe00c4b",
+        "modelId": "d92a3b03-a48c-88aa-8472-d77d70ee87ec",
+        "nodeType": "entity",
+        "position": {
+          "x": 760,
+          "y": 560
+        }
+      },
+      {
+        "id": "95e45887-bc66-883a-89ba-a3c5fd5fc950",
+        "modelId": "8be726e8-2e2f-8363-8694-6d2e9890aec9",
+        "nodeType": "entity",
+        "position": {
+          "x": 1400,
+          "y": 560
+        }
+      },
+      {
+        "id": "0379fcdb-41ac-8224-8357-ac997fa4720a",
+        "modelId": "8caed082-5015-8e47-80de-fa98cb5e10fd",
+        "nodeType": "entity",
+        "position": {
+          "x": 80,
+          "y": 560
+        }
+      },
+      {
+        "id": "4c205a92-0b89-8775-8ede-a7b4414b292f",
+        "modelId": "611e8547-ede0-873e-8dfa-544905d3d978",
+        "nodeType": "entity",
+        "position": {
+          "x": 80,
+          "y": 900
+        }
+      },
+      {
+        "id": "bb17f90e-e5eb-880f-8240-d388fbd4af59",
+        "modelId": "f65ea851-9993-878a-8e71-9ba38effcbcc",
+        "nodeType": "association",
+        "position": {
+          "x": 420,
+          "y": 80
+        }
+      },
+      {
+        "id": "598b45fc-b1c6-8b23-8c63-06d66b9af15d",
+        "modelId": "7115ce85-978c-8a50-8ebe-612f8b0b5ea2",
+        "nodeType": "association",
+        "position": {
+          "x": 760,
+          "y": 320
+        }
+      },
+      {
+        "id": "390c6183-24bc-8332-8848-748139f275c8",
+        "modelId": "2393a820-92ba-8297-83c5-6fce3cd7b0cd",
+        "nodeType": "association",
+        "position": {
+          "x": 1080,
+          "y": 560
+        }
+      },
+      {
+        "id": "9c4d5794-734c-8d9f-8361-8392b1dcfb35",
+        "modelId": "5a4cc42d-d20c-8068-8f95-e9dbc797025e",
+        "nodeType": "association",
+        "position": {
+          "x": 420,
+          "y": 560
+        }
+      },
+      {
+        "id": "e36eca48-4552-8591-8a7d-8472368eda13",
+        "modelId": "cf17943b-d63e-8354-8e37-d935da792746",
+        "nodeType": "association",
+        "position": {
+          "x": 420,
+          "y": 300
+        }
+      }
+    ],
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    },
+    "comments": []
+  },
+  "settings": {
+    "sqlDialect": "postgresql",
+    "namingConvention": "snake_case",
+    "gridEnabled": true,
+    "snapToGrid": true
+  }
+}

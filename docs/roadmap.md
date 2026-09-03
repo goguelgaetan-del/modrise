@@ -42,7 +42,7 @@
 - [x] Générateur MySQL / MariaDB (règles documentées dans
       [mysql-generation.md](mysql-generation.md))
 - [x] Générateur SQLite, clés étrangères inline imposées, `PRAGMA
-    foreign_keys` (règles documentées dans
+foreign_keys` (règles documentées dans
       [sqlite-generation.md](sqlite-generation.md)), validé réellement via
       le CLI `sqlite3`
 - [x] Sélecteur de dialecte fonctionnel dans l'interface, persisté dans
@@ -91,18 +91,99 @@
       Zustand resserrés, vérifiés sur un modèle de ~100 entités / 150
       associations
 
+## v0.5.1 — Performance du canvas (terminé)
+
+- [x] Déplacement des nœuds via une transaction transitoire : le store
+      n'est plus écrit à chaque image, une seule écriture au relâchement —
+      162 ms → 25 ms par événement sur 250 nœuds (−85 %), voir
+      [canvas-performance.md](canvas-performance.md)
+- [x] Une seule entrée d'historique et une seule autosauvegarde par
+      déplacement, quelle que soit sa durée
+- [x] Recalcul géométrique limité aux arêtes touchant un nœud déplacé,
+      identité référentielle préservée pour tout le reste
+- [x] Tests de comptage (écritures, validations, transformations MLD,
+      sauvegardes) et garde-fou de performance en rapport plutôt qu'en
+      millisecondes
+- [x] Fixture déterministe de grand modèle partagée entre tests unitaires
+      et Playwright
+- [x] Instrumentation locale de développement et panneau de diagnostic
+      caché derrière `?debugPerformance=1`, absent du build de production
+- [x] Barrière d'erreur React : plus d'écran blanc, rechargement et export
+      du projet proposés, aucune pile d'appels exposée en production
+
 ## v1.0 — Stabilisation
 
-- [ ] Documentation complète
-- [ ] Couverture de tests renforcée
-- [ ] Exemples supplémentaires (e-commerce, bibliothèque…)
-- [ ] Déploiement public (hébergement statique)
-- [ ] Engagement de compatibilité durable du format de fichier
+### Bloquants
+
+Ces points conditionnent la publication d'une v1.0 : ils touchent la
+confiance qu'un utilisateur peut placer dans l'outil pour un travail réel.
+
+- [x] Performance sur les grands modèles (livré en v0.5.1)
+- [x] Engagement de compatibilité durable du format `.merise.json` :
+      fixtures immuables par version passée (v1, v2, v3) dans
+      `src/tests/fixtures/formats/`, écrites à la main et jamais régénérées
+      — avec garde-fou contre une régénération accidentelle —, testées
+      jusqu'au format courant puis en stabilité après réexport/réimport. La
+      politique est documentée dans [versioning.md](versioning.md) : les
+      migrations sont **montantes uniquement**, limite assumée et non un
+      engagement dans les deux sens
+- [x] Robustesse de l'import/export : fichier vide, illisible, tronqué, JSON
+      invalide, JSON valide non-projet, version future inconnue, structure
+      invalide, très gros fichier (limite de 16 Mio vérifiée avant lecture) —
+      message dédié dans chaque cas, projet en cours intact, application
+      toujours utilisable ; couvert en unitaire et en bout en bout (voir
+      [file-format.md](file-format.md#cas-refuses-et-leur-message))
+- [x] Gestion des erreurs non rattrapées : périmètre d'erreur React
+      (message compréhensible, rechargement possible, export du projet
+      local avant de perdre l'état), sans masquer l'erreur silencieusement
+      — livré en v0.5.1 (`src/app/ErrorBoundary.tsx`)
+- [x] Documentation utilisateur (pas seulement de développement),
+      distincte des documents de conception : [guide](guide/README.md) —
+      démarrage rapide du canevas vide jusqu'au SQL, notions Merise
+      réellement couvertes (types, identifiants simples/composés/alternatifs,
+      associations binaires/n-aires/réflexives, quatre cardinalités et leur
+      traduction en MLD), fichiers et récupération après erreur, limites
+      connues, navigateurs vérifiés et confidentialité local-first
+- [x] Exemples supplémentaires livrés : « Boutique en ligne » (association
+      réflexive avec rôles, identifiants alternatifs, ligne de commande N,N)
+      et « Bibliothèque » (association ternaire, identifiant primaire composé
+      propagé en clé étrangère composée), en plus de la gestion d'hôtel.
+      Construits par des fabriques déterministes (`src/core/examples`),
+      exportés par `pnpm examples:export`, jamais recopiés à la main ; un
+      test vérifie que les fichiers livrés correspondent aux fabriques, que
+      les trois exemples ne produisent aucun problème de validation et
+      génèrent du SQL dans les trois dialectes
+- [ ] Déploiement public (hébergement statique) et release GitHub associée.
+      Le mécanisme est en place et vérifié — chemin de base réglable
+      (`BASE_PATH`), workflow `deploy.yml` restreint à `main`, et
+      `pnpm verify:static` qui sert le build sous `/modrise/` et le parcourt
+      dans Chromium jusqu'au SQL, en échouant sur toute requête perdue (voir
+      [deployment.md](deployment.md)). Restent à faire, et hors de portée
+      tant que la branche courante n'est pas fusionnée : activer GitHub Pages
+      sur la source « GitHub Actions », publier, vérifier l'URL publique dans
+      un navigateur, poser l'étiquette et écrire la release
+- [x] Politique de versionnage annoncée (que signifie une version majeure,
+      mineure, corrective pour l'application _et_ pour le format) —
+      [versioning.md](versioning.md), version de l'application alignée sur
+      `0.5.1` dans `package.json`
+
+### Non bloquants
+
+Souhaitables, mais une v1.0 utile et honnête peut sortir sans eux.
+
+- [ ] Héritage Merise (spécialisation/généralisation)
+- [ ] Rétro-ingénierie SQL / import depuis une base existante
+- [ ] Application desktop Tauri
+- [ ] Partage de projet, collaboration, historique cloud
+- [ ] MCT (modèle conceptuel des traitements), diagrammes de flux
+- [ ] Coloration syntaxique du SQL
+- [ ] Extension Visual Studio Code
+
+Le déroulé opérationnel de la sortie est détaillé dans
+[release-checklist.md](release-checklist.md).
 
 ## Versions futures
 
-- Application desktop Tauri
-- Rétro-ingénierie SQL / import depuis une base existante
-- Héritage Merise, MCT, diagrammes de flux
-- Partage de projet, collaboration, historique cloud
-- Extension Visual Studio Code
+Reprises de la liste « non bloquants » ci-dessus : application desktop
+Tauri, rétro-ingénierie SQL, héritage Merise, MCT et diagrammes de flux,
+collaboration, extension Visual Studio Code.

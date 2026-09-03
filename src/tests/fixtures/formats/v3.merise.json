@@ -1,0 +1,135 @@
+{
+  "formatVersion": 3,
+  "project": {
+    "id": "d2e7a4b9-6f35-4c81-9a2e-7b4d1f8c3e50",
+    "name": "Fixture de format v3",
+    "description": "Fichier v3 figé : format courant au moment de son écriture — commentaires et verrouillage présents.",
+    "createdAt": "2025-07-11T08:15:00.000Z",
+    "updatedAt": "2025-07-11T09:05:00.000Z"
+  },
+  "conceptualModel": {
+    "entities": [
+      {
+        "id": "2a7b9c14-3d6e-4f82-b0a5-7c1e9d4f8b20",
+        "name": "PERSONNE",
+        "attributes": [
+          {
+            "id": "5c3e8a17-9b24-4d6f-8e01-3a7c5b9d2f41",
+            "name": "numero",
+            "dataType": { "kind": "integer" },
+            "required": true,
+            "unique": true
+          },
+          {
+            "id": "8d1f4b26-7a35-4c9e-b2f8-6e0a3c7d5b92",
+            "name": "nom",
+            "dataType": { "kind": "varchar", "length": 80 },
+            "required": true,
+            "unique": false
+          }
+        ],
+        "identifiers": [
+          {
+            "id": "b6e2d739-4c81-4a5f-9d3b-2f8a1c6e4d70",
+            "attributeIds": ["5c3e8a17-9b24-4d6f-8e01-3a7c5b9d2f41"],
+            "primary": true
+          }
+        ]
+      },
+      {
+        "id": "3f8c5d21-6b47-4e9a-8c15-9d2f7a4b6e30",
+        "name": "VEHICULE",
+        "attributes": [
+          {
+            "id": "9a4d7e35-2c68-4b1f-a7d9-4e6b8c1f3a52",
+            "name": "immatriculation",
+            "dataType": { "kind": "varchar", "length": 12 },
+            "required": true,
+            "unique": true
+          }
+        ],
+        "identifiers": [
+          {
+            "id": "c7f1a942-8d53-4e26-b9c4-1a7e5d3f8b60",
+            "attributeIds": ["9a4d7e35-2c68-4b1f-a7d9-4e6b8c1f3a52"],
+            "primary": true
+          }
+        ]
+      }
+    ],
+    "associations": [
+      {
+        "id": "4e9b6c38-1a72-4d5e-8f03-7b2c9a5d1e40",
+        "name": "CONDUIT",
+        "attributes": [
+          {
+            "id": "6b2e8f41-5d93-4a7c-b1e6-8f3a2d7c9b50",
+            "name": "depuis_le",
+            "dataType": { "kind": "date" },
+            "required": false,
+            "unique": false
+          }
+        ],
+        "participations": [
+          {
+            "id": "a1d5c827-3f64-4b9e-8a02-5c7d1f4e9b30",
+            "entityId": "2a7b9c14-3d6e-4f82-b0a5-7c1e9d4f8b20",
+            "cardinality": { "min": 0, "max": "N" }
+          },
+          {
+            "id": "d8f3b615-7c29-4e5a-9b41-3d6f8a2c7e10",
+            "entityId": "3f8c5d21-6b47-4e9a-8c15-9d2f7a4b6e30",
+            "role": "conduit par",
+            "cardinality": { "min": 1, "max": 1 }
+          }
+        ]
+      }
+    ]
+  },
+  "diagram": {
+    "nodes": [
+      {
+        "id": "7c1a4e93-2b58-4d6f-8e07-1b9c3a5d7f20",
+        "modelId": "2a7b9c14-3d6e-4f82-b0a5-7c1e9d4f8b20",
+        "nodeType": "entity",
+        "position": { "x": 0, "y": 0 },
+        "width": 240,
+        "locked": false
+      },
+      {
+        "id": "e5b8d247-9a13-4c7e-b6f2-8d4a1c9e3b50",
+        "modelId": "3f8c5d21-6b47-4e9a-8c15-9d2f7a4b6e30",
+        "nodeType": "entity",
+        "position": { "x": 480, "y": 0 },
+        "locked": true
+      },
+      {
+        "id": "1d6f9a35-4e82-4b7c-a9d3-6f2b8e5c1a40",
+        "modelId": "4e9b6c38-1a72-4d5e-8f03-7b2c9a5d1e40",
+        "nodeType": "association",
+        "position": { "x": 240, "y": 160 },
+        "locked": false
+      },
+      {
+        "id": "5f2c8b74-1e69-4a3d-b8c5-2a7f4d9e6b10",
+        "modelId": "9e6b3a58-4d17-4c2f-a5e8-1b9d6f3c7a20",
+        "nodeType": "comment",
+        "position": { "x": 0, "y": 320 },
+        "locked": false
+      }
+    ],
+    "viewport": { "x": -40, "y": 12, "zoom": 0.9 },
+    "comments": [
+      {
+        "id": "9e6b3a58-4d17-4c2f-a5e8-1b9d6f3c7a20",
+        "text": "Un véhicule peut n'être conduit par personne."
+      }
+    ]
+  },
+  "settings": {
+    "namingConvention": "PascalCase",
+    "sqlDialect": "sqlite",
+    "gridEnabled": false,
+    "snapToGrid": false
+  }
+}

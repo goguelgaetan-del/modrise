@@ -103,24 +103,110 @@ tâche :**
   change pas), qui ne redéclenchent un rendu que si l'élément réellement
   affiché par l'inspecteur change.
 
-**Limite résiduelle, non résolue ici :** glisser-déposer un nœud sur ce
-modèle à 250 nœuds reste perceptiblement plus lent qu'un modèle vide (de
-l'ordre de la seconde pour quelques pas de déplacement, contre quelques
-dizaines de millisecondes à vide, mesuré via Playwright). Les deux
-correctifs ci-dessus n'ont réduit ce coût que marginalement ; un profilage
-CPU sommaire montre du temps passé dans le rendu React Flow lui-même
-(mesures de dimensions, reconstruction du tableau d'arêtes complet à
-chaque pas de déplacement) plutôt que dans le code de Modrise. Une
-optimisation plus profonde (ne recalculer que les arêtes touchant le nœud
-déplacé, découpler la position affichée pendant le glisser de l'écriture
-immédiate dans le store) est un candidat naturel pour une prochaine passe
-dédiée, mais dépasse le cadre d'un contrôle de non-régression. Aucun
-blocage bloquant l'usage n'a été observé (pas de gel, pas de timeout) —
-seulement une latence perceptible sur cette taille de modèle largement
-supérieure aux projets réels visés par l'outil.
+**Limite résiduelle à la fin de la v0.5, résolue depuis :** glisser-déposer
+un nœud sur ce modèle à 250 nœuds restait perceptiblement plus lent qu'un
+modèle vide — 162 ms par événement de déplacement, contre 19 ms sur un
+diagramme à 3 nœuds, soit un rapport de 8,7×. Le profilage a confirmé que
+le temps était passé dans le rendu React Flow lui-même, pas dans le code de
+Modrise (la chaîne store → adaptateurs coûtait 0,20 ms par événement, soit
+0,1 % du total).
+
+**La passe dédiée annoncée ici a été menée en v0.5.1** : la position
+affichée pendant un glissement est désormais découplée de l'écriture dans
+le store, et seules les arêtes touchant un nœud déplacé sont réexaminées.
+Résultat mesuré : **24,7 ms par événement, rapport ramené à 1,3× — soit une
+réduction de 85 %** de la durée totale d'un scénario de déplacement. Le
+détail des mesures, des causes et de l'architecture retenue est dans
+[canvas-performance.md](canvas-performance.md). Le coût en poids de bundle
+de l'ensemble de la v0.5.1 est détaillé dans la section suivante.
 
 **Autres parcours vérifiés sans anomalie** sur ce modèle : import du
 fichier, changement d'onglet Validation/MLD/SQL, organisation automatique
 (dagre, ~1,2 s pour 250 nœuds), sauvegarde locale, export SVG — tous sous
 la seconde à quelques secondes, sans blocage prolongé ni ré-exécution
 visible en boucle.
+
+## Analyse du chunk initial (`pnpm analyze`, v0.5.1)
+
+`pnpm analyze` (`ANALYZE=1 vite build`) produit `dist/bundle-analysis.html`
+via `rollup-plugin-visualizer`. Le plugin n'est chargé que sous
+`ANALYZE=1` : il n'entre jamais dans un build normal.
+
+### Poids des chunks émis (build de production, fin v0.5.1)
+
+| Chunk | Taille | gzip | Chargement |
+| --- | --- | --- | --- |
+| `index-*.js` | 860,18 kB | 264,98 kB | immédiat |
+| `index-*.css` | 83,41 kB | 14,17 kB | immédiat |
+| `project-store-*.js` | 23,77 kB | 8,32 kB | immédiat (partagé, `modulepreload`) |
+| `dagre.esm-*.js` | 39,53 kB | 13,42 kB | à la demande |
+| `generate-script-*.js` | 8,65 kB | 3,00 kB | à la demande |
+| `SqlPreviewPanel-*.js` | 6,81 kB | 2,52 kB | à la demande |
+| `LogicalModelPanel-*.js` | 3,79 kB | 1,49 kB | à la demande |
+| `types-*.js` | 2,39 kB | 1,22 kB | à la demande |
+| `data-types-*.js` | 1,42 kB | 0,59 kB | à la demande |
+| `dialect-*.js` (×3) | ~1 kB chacun | ~0,5 kB | à la demande |
+| `export-png-*.js` | 1,03 kB | 0,64 kB | à la demande |
+| `quoting-*.js` | 0,07 kB | 0,08 kB | à la demande |
+| polices Geist (5 `.woff2`) | 76,41 kB | — | à la demande (`unicode-range`) |
+
+### Ce qui compose réellement les 860 kB
+
+Agrégation des modules du rapport par paquet d'origine (taille rendue,
+avant compression) :
+
+| Origine | Poids rendu |
+| --- | --- |
+| `react-dom` | 449,2 kB |
+| `@xyflow/react` + `@xyflow/system` | 231,4 kB |
+| `dexie` | 129,5 kB |
+| `zod` | 123,3 kB |
+| `tailwind-merge` | 54,6 kB |
+| `@dagrejs/dagre` | 51,4 kB |
+| `react-resizable-panels` | 45,2 kB |
+| `@radix-ui/*` (select, scroll-area, menu, tooltip…) | ~110 kB |
+| `d3-selection` + `d3-transition` | 50,5 kB |
+| `lucide-react` | 29,7 kB |
+| **Code applicatif Modrise** (`src/**`) | **~190 kB** |
+
+Conclusion honnête : **le chunk initial est dominé par le runtime tiers,
+pas par Modrise.** Le code applicatif représente environ un cinquième du
+total, et le noyau métier (`src/core/**` : SQL, transformations,
+sérialisation, validation) moins de 60 kB. Réduire significativement les
+860 kB supposerait de différer React Flow ou Dexie derrière l'écran
+d'accueil, pas de découper davantage le code de Modrise — arbitrage non
+retenu ici : les deux sont nécessaires dès le premier rendu utile.
+
+### Coût cumulé de la v0.5.1
+
+Chaque étape a été mesurée sur un build réel, pas estimée :
+
+| Étape | Chunk initial | gzip | Δ |
+| --- | --- | --- | --- |
+| Fin v0.5 (référence) | 855,69 kB | 263,50 kB | — |
+| Transaction de déplacement transitoire | 857,38 kB | 264,05 kB | +1,69 kB |
+| Instrumentation + panneau de diagnostic | 858,32 kB | 264,41 kB | +0,78 kB |
+| Barrière d'erreur React | 860,61 kB | 265,10 kB | +2,29 kB |
+| Barrière d'erreur en imports statiques | 860,18 kB | 264,98 kB | −0,43 kB |
+| **Total v0.5.1** | **860,18 kB** | **264,98 kB** | **+4,49 kB (+1,48 kB gzip)** |
+
+**Aucune dépendance n'a été ajoutée** pendant la v0.5.1 : ni bibliothèque
+de gestion d'état, ni bibliothèque de performance, ni outil de mesure.
+`package.json` est inchangé. L'augmentation de 1,48 kB gzip (+0,56 %)
+correspond entièrement à du code applicatif écrit pour cette version.
+
+### Imports dynamiques inefficaces : diagnostic et correction
+
+Le build a un temps signalé deux `INEFFECTIVE_DYNAMIC_IMPORT` visant
+`src/app/ErrorBoundary.tsx`. Le rapport d'analyse a confirmé le
+diagnostic : `project-assembly` est déjà importé statiquement par `App`,
+`TopBar` et `autosave`, et `import-export` par `TopBar` — les deux modules
+sont donc dans le chunk initial quoi qu'il arrive, et l'`import()` de la
+barrière ne déplaçait rien.
+
+Ces imports sont repassés en statiques. Le gain n'est pas seulement
+cosmétique : le sauvetage du projet ne dépend plus d'une résolution de
+module effectuée *après* le plantage, ce qui est précisément le moment où
+l'on veut le moins de dépendances possible. Le build a d'ailleurs légèrement
+maigri (−0,43 kB), la machinerie d'import dynamique disparaissant avec eux.
+Le build de production ne signale plus aucun import dynamique inefficace.

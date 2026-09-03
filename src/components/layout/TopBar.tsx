@@ -23,6 +23,8 @@ import { FileFormatError } from '@/core/serialization/file-format';
 import { saveNow, withAutosaveSuspended } from '@/persistence/autosave';
 import { downloadProjectFile, readProjectFile } from '@/features/projects/import-export';
 import { loadNewProject as loadNewProjectShared } from '@/features/projects/new-project';
+import type { NewProjectKind } from '@/features/projects/new-project';
+import { DELIVERED_EXAMPLES } from '@/core/examples';
 import { downloadDiagramSvg } from '@/features/diagram/export/export-svg';
 import { computeAutoLayout } from '@/features/diagram/layout/auto-layout';
 import type { LayoutDirection } from '@/features/diagram/layout/auto-layout';
@@ -82,13 +84,13 @@ export function TopBar() {
       });
       requestAnimationFrame(() => void fitView({ padding: 0.2, duration: 300 }));
     } catch {
-      notify('error', "Organisation automatique impossible.");
+      notify('error', 'Organisation automatique impossible.');
     } finally {
       setIsLayingOut(false);
     }
   };
 
-  const loadNewProject = async (kind: 'empty' | 'hotel') => {
+  const loadNewProject = async (kind: NewProjectKind) => {
     await loadNewProjectShared(kind);
     requestAnimationFrame(() => void fitView({ padding: 0.2 }));
   };
@@ -153,9 +155,11 @@ export function TopBar() {
           <DropdownMenuItem onClick={() => void loadNewProject('empty')}>
             Projet vide
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => void loadNewProject('hotel')}>
-            Exemple : Gestion d'hôtel
-          </DropdownMenuItem>
+          {DELIVERED_EXAMPLES.map((example) => (
+            <DropdownMenuItem key={example.key} onClick={() => void loadNewProject(example.key)}>
+              Exemple : {example.label}
+            </DropdownMenuItem>
+          ))}
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -236,7 +240,9 @@ export function TopBar() {
               </Button>
             </span>
           </TooltipTrigger>
-          <TooltipContent>{undoLabel ? `Annuler « ${undoLabel} »` : 'Annuler (Ctrl+Z)'}</TooltipContent>
+          <TooltipContent>
+            {undoLabel ? `Annuler « ${undoLabel} »` : 'Annuler (Ctrl+Z)'}
+          </TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>

@@ -97,6 +97,75 @@ export function toReactFlowNodes(
 }
 
 /**
+ * Superpose les positions d'un déplacement en cours aux nœuds dérivés du
+ * store, sans repasser par celui-ci (v0.5.1, voir
+ * docs/canvas-performance.md).
+ *
+ * Seuls les nœuds réellement déplacés donnent lieu à un nouvel objet : les
+ * autres conservent leur identité référentielle, ce qui laisse React Flow et
+ * les `memo` des composants de nœud court-circuiter leur rendu. Sans
+ * déplacement en cours, le tableau d'origine est retourné tel quel.
+ */
+export function applyDragPreviewToNodes(
+  nodes: ModriseNode[],
+  positions: Readonly<Record<string, { x: number; y: number }>> | null,
+): ModriseNode[] {
+  if (!positions) return nodes;
+  const ids = Object.keys(positions);
+  if (ids.length === 0) return nodes;
+  let changed = false;
+  const next = nodes.map((node) => {
+    const position = positions[node.id];
+    if (!position || (position.x === node.position.x && position.y === node.position.y)) {
+      return node;
+    }
+    changed = true;
+    return { ...node, position } as ModriseNode;
+  });
+  return changed ? next : nodes;
+}
+
+/**
+ * Recalcule la géométrie des seules arêtes touchées par un déplacement en
+ * cours : le choix du côté de raccordement ne dépend que des positions des
+ * deux nœuds reliés, donc une arête dont aucune extrémité ne bouge est
+ * conservée à l'identique (§ « arêtes » de docs/canvas-performance.md).
+ */
+export function applyDragPreviewToEdges(
+  edges: ModriseEdge[],
+  diagramNodes: DiagramNode[],
+  positions: Readonly<Record<string, { x: number; y: number }>> | null,
+): ModriseEdge[] {
+  if (!positions) return edges;
+  const movedIds = Object.keys(positions);
+  if (movedIds.length === 0) return edges;
+
+  const moved = new Set(movedIds);
+  if (!edges.some((edge) => moved.has(edge.source) || moved.has(edge.target))) return edges;
+
+  const nodeById = new Map<string, DiagramNode>();
+  for (const node of diagramNodes) {
+    const position = positions[node.id];
+    nodeById.set(node.id, position ? { ...node, position } : node);
+  }
+
+  let changed = false;
+  const next = edges.map((edge) => {
+    if (!moved.has(edge.source) && !moved.has(edge.target)) return edge;
+    const source = nodeById.get(edge.source);
+    const target = nodeById.get(edge.target);
+    if (!source || !target) return edge;
+    const sides = closestSides(source, target);
+    const sourceHandle = `source-${sides.from}`;
+    const targetHandle = `target-${sides.to}`;
+    if (edge.sourceHandle === sourceHandle && edge.targetHandle === targetHandle) return edge;
+    changed = true;
+    return { ...edge, sourceHandle, targetHandle };
+  });
+  return changed ? next : edges;
+}
+
+/**
  * Une arête React Flow par participation : de l'entité vers l'association,
  * étiquetée par la cardinalité (côté entité) et le rôle éventuel.
  */

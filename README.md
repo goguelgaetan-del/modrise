@@ -6,6 +6,15 @@ Modrise est un éditeur Merise moderne, gratuit et open source, utilisable direc
 
 Modrise permet de concevoir des modèles conceptuels de données (MCD), de générer automatiquement leur modèle logique (MLD) et de produire les scripts SQL correspondants — le tout sans backend, sans compte et sans base distante : les projets sont stockés localement dans le navigateur (IndexedDB).
 
+## Documentation utilisateur
+
+Pour **utiliser** Modrise (et non le développer), commencez par le
+[guide d'utilisation](docs/guide/README.md) :
+[démarrage rapide](docs/guide/demarrage-rapide.md) (du canevas vide au SQL),
+[ce que Modrise sait modéliser](docs/guide/modelisation.md),
+[fichiers, sauvegarde et récupération](docs/guide/fichiers.md) et
+[limites connues](docs/guide/limites.md).
+
 ## Objectifs
 
 - Un éditeur Merise **local-first** : aucune donnée ne quitte le navigateur.
@@ -26,7 +35,7 @@ Modrise permet de concevoir des modèles conceptuels de données (MCD), de gén�
 - Suppression protégée : une entité référencée n'est jamais supprimée silencieusement (suppression simple ou groupée).
 - Sauvegarde automatique dans IndexedDB (statut affiché), rechargement du dernier projet.
 - Import / export `.merise.json` validé par Zod, avec messages d'erreur clairs.
-- Projet d'exemple « Gestion d'hôtel », thème clair / sombre.
+- Trois projets d'exemple livrés — « Gestion d'hôtel », « Boutique en ligne » et « Bibliothèque » —, ouvrables depuis le menu « Nouveau » et disponibles dans [examples/](examples/) ; thème clair / sombre.
 - **Annuler / rétablir** (une entrée par geste, jamais par pixel ou par frappe) avec libellé de l'action affiché sur les boutons de la barre supérieure. Voir [docs/editor-history.md](docs/editor-history.md).
 - **Presse-papiers interne** : copier / coller / dupliquer une sélection (entités, associations, commentaires), avec remappage complet des identifiants et décalage croissant à chaque collage. Voir [docs/clipboard.md](docs/clipboard.md).
 - **Sélection multiple** (rectangle ou Shift-clic) avec déplacement, suppression, duplication et copie groupés.
@@ -42,6 +51,7 @@ Modrise permet de concevoir des modèles conceptuels de données (MCD), de gén�
 - **Navigation clavier entre problèmes de validation** (F8 / Maj+F8) : sélectionne, recentre et ouvre l'inspecteur sur le problème suivant/précédent.
 - **Barre de statut** compacte (entités, associations, commentaires, erreurs, dialecte SQL, zoom, statut d'enregistrement) et **aide de premier lancement** (4 étapes, refermable définitivement).
 - **Chargement différé** des dialectes SQL, des panneaux MLD/SQL, de l'export PNG et de la bibliothèque d'auto-layout (code-splitting) pour un chargement initial plus léger. Voir [docs/performance.md](docs/performance.md).
+- **Déplacement fluide sur les grands diagrammes** : pendant un glisser-déposer, les positions vivent dans un état transitoire et ne sont écrites qu'au relâchement — une seule modification du projet, une seule entrée d'historique, une seule sauvegarde, aucun recalcul du MLD ni du SQL. Sur un modèle de 100 entités / 150 associations (250 nœuds), le coût d'un événement de déplacement passe de 162 ms à 25 ms (−85 %). Voir [docs/canvas-performance.md](docs/canvas-performance.md).
 
 ## Fonctionnalités prévues
 
@@ -71,6 +81,8 @@ pnpm typecheck    # vérification TypeScript
 pnpm test         # tests unitaires (Vitest)
 pnpm test:e2e     # tests de bout en bout (Playwright)
 pnpm analyze      # build avec analyse de la taille des chunks (docs/performance.md)
+pnpm examples:export # régénérer les fichiers examples/*.merise.json
+pnpm verify:static # build sous-répertoire + vérification dans Chromium (docs/deployment.md)
 pnpm format       # formatage Prettier
 ```
 
@@ -96,7 +108,19 @@ Principe central : **le modèle métier est la source de vérité**. React Flow 
 
 ## Format de fichier
 
-Les projets s'exportent en `.merise.json`, format JSON versionné (`formatVersion`, actuellement 3) avec pipeline d'import : lecture sans confiance → migration → validation Zod → chargement. Un fichier v1 (avant les commentaires graphiques du v0.4) ou v2 (avant le verrouillage de nœuds du v0.5) s'importe et se migre normalement, en chaînant les migrations nécessaires. Voir [docs/file-format.md](docs/file-format.md). Un exemple complet est fourni dans [examples/gestion-hotel.merise.json](examples/gestion-hotel.merise.json).
+Les projets s'exportent en `.merise.json`, format JSON versionné (`formatVersion`, actuellement 3) avec pipeline d'import : lecture sans confiance → migration → validation Zod → chargement. Un fichier v1 (avant les commentaires graphiques du v0.4) ou v2 (avant le verrouillage de nœuds du v0.5) s'importe et se migre normalement, en chaînant les migrations nécessaires. Voir [docs/file-format.md](docs/file-format.md) et, pour ce qu'engage un numéro de version, [docs/versioning.md](docs/versioning.md). Des exemples complets sont fournis dans [examples/](examples/) ; ils sont produits par `pnpm examples:export` à partir des fabriques déterministes de `src/core/examples`, jamais édités à la main.
+
+## Déploiement
+
+L'application est entièrement statique : `pnpm build` produit un dossier
+`dist/` publiable tel quel, sans serveur ni base de données. Le dépôt est
+configuré pour GitHub Pages (`.github/workflows/deploy.yml`, déclenché sur
+`main`), avec un chemin de base réglable par `BASE_PATH` pour l'hébergement en
+sous-répertoire. La procédure, le piège du chemin de base et la vérification
+navigateur sont décrits dans [docs/deployment.md](docs/deployment.md).
+
+GitHub Pages n'est pas encore activé sur ce dépôt : aucune URL publique n'est
+donc annoncée ici pour l'instant.
 
 ## Contribution
 

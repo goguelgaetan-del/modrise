@@ -22,6 +22,7 @@ import type {
 import { getCachedSqlDialect, loadSqlDialect } from '@/core/sql/registry';
 import { useProjectStore } from '@/stores/project-store';
 import { useLogicalModel } from '@/features/logical-model/use-logical-model';
+import { countEvent } from '@/lib/performance/diagnostics';
 
 export type SqlPreviewState =
   | { status: 'blocked' }
@@ -63,6 +64,7 @@ export function useSqlGeneration(options: SqlGenerationOptions): SqlPreviewState
     if (!logicalModelResult.success) return { status: 'blocked' };
     if (failedDialectId === dialectId) return { status: 'dialect-load-error', dialectId };
     if (!dialect) return { status: 'loading-dialect' };
+    countEvent('sql-recompute');
     return { status: 'ready', result: dialect.generate(logicalModelResult.model, options) };
   }, [logicalModelResult, dialect, dialectId, failedDialectId, options]);
 }

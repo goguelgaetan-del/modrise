@@ -95,6 +95,61 @@ describe('diagramStore — sélection, viewport et collage', () => {
   });
 });
 
+describe('diagramStore — déplacement groupé (moveNodes)', () => {
+  beforeEach(() => {
+    store().loadDiagram({
+      nodes: [
+        { id: 'a', modelId: 'm-a', nodeType: 'entity', position: { x: 0, y: 0 } },
+        { id: 'b', modelId: 'm-b', nodeType: 'entity', position: { x: 100, y: 0 } },
+        { id: 'verrou', modelId: 'm-c', nodeType: 'entity', position: { x: 200, y: 0 }, locked: true },
+      ],
+      viewport: { x: 0, y: 0, zoom: 1 },
+      comments: [],
+    });
+  });
+
+  it('applique plusieurs positions en une seule écriture', () => {
+    let notifications = 0;
+    const unsubscribe = useDiagramStore.subscribe(
+      (state) => state.nodes,
+      () => {
+        notifications += 1;
+      },
+    );
+    store().moveNodes({ a: { x: 10, y: 10 }, b: { x: 110, y: 10 } });
+    unsubscribe();
+
+    expect(notifications).toBe(1);
+    expect(store().nodes.find((n) => n.id === 'a')?.position).toEqual({ x: 10, y: 10 });
+    expect(store().nodes.find((n) => n.id === 'b')?.position).toEqual({ x: 110, y: 10 });
+  });
+
+  it('ignore les nœuds verrouillés, comme moveNode', () => {
+    store().moveNodes({ a: { x: 10, y: 10 }, verrou: { x: 999, y: 999 } });
+    expect(store().nodes.find((n) => n.id === 'verrou')?.position).toEqual({ x: 200, y: 0 });
+    expect(store().nodes.find((n) => n.id === 'a')?.position).toEqual({ x: 10, y: 10 });
+  });
+
+  it('n’écrit rien pour un lot vide', () => {
+    let notifications = 0;
+    const unsubscribe = useDiagramStore.subscribe(
+      (state) => state.nodes,
+      () => {
+        notifications += 1;
+      },
+    );
+    store().moveNodes({});
+    unsubscribe();
+    expect(notifications).toBe(0);
+  });
+
+  it('ignore un identifiant inconnu sans altérer les autres nœuds', () => {
+    store().moveNodes({ inconnu: { x: 5, y: 5 }, a: { x: 1, y: 1 } });
+    expect(store().nodes).toHaveLength(3);
+    expect(store().nodes.find((n) => n.id === 'a')?.position).toEqual({ x: 1, y: 1 });
+  });
+});
+
 describe('selectPersistedDiagram', () => {
   it('exclut la sélection (état d’interface, non persisté)', () => {
     store().setSelection(['x']);

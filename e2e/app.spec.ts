@@ -96,6 +96,72 @@ test("rejette un fichier d'import invalide sans casser l'application", async ({ 
   await expect(page.getByTestId('entity-node-CLIENT')).toBeVisible();
 });
 
+/**
+ * Un import refusé doit laisser l'application *utilisable*, pas seulement
+ * affichée : ces trois scénarios vérifient donc le message, puis rouvrent
+ * l'inspecteur sur une entité et modifient le projet pour prouver que rien
+ * n'est resté bloqué.
+ */
+interface ImportPayload {
+  name: string;
+  mimeType: string;
+  buffer: Buffer;
+}
+
+async function expectRefusedImport(page: Page, file: ImportPayload): Promise<void> {
+  await page.getByTestId('import-file-input').setInputFiles(file);
+  await expect(page.getByText(/Import impossible/)).toBeVisible();
+
+  // Le projet en cours est intact...
+  await expect(page.getByTestId('project-name-input')).toHaveValue("Gestion d'hôtel");
+  await expect(page.getByTestId('entity-node-CLIENT')).toBeVisible();
+
+  // ...et l'application répond encore aux interactions.
+  await page.getByTestId('entity-node-CLIENT').click();
+  await expect(page.getByTestId('entity-name-input')).toBeVisible();
+}
+
+test("refuse un fichier tronqué sans casser l'application", async ({ page }) => {
+  await expectRefusedImport(page, {
+    name: 'tronque.merise.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('{"formatVersion": 3, "project": {"id": "abc", "na'),
+  });
+  await expect(page.getByText(/ne contient pas de JSON valide/)).toBeVisible();
+});
+
+test("refuse un fichier d'une version future en indiquant quoi faire", async ({ page }) => {
+  const fs = await import('node:fs/promises');
+  const raw = JSON.parse(
+    await fs.readFile(
+      new URL('../src/tests/fixtures/formats/v3.merise.json', import.meta.url),
+      'utf8',
+    ),
+  ) as { formatVersion: number };
+  raw.formatVersion = 99;
+
+  await expectRefusedImport(page, {
+    name: 'futur.merise.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(raw)),
+  });
+  await expect(page.getByText(/Mettez Modrise à jour/)).toBeVisible();
+});
+
+test("refuse un fichier surdimensionné sans figer l'onglet", async ({ page }) => {
+  // 16 Mio + 1 octet : juste au-dessus de MAX_PROJECT_FILE_BYTES. Le contenu
+  // n'a pas d'importance — il ne doit jamais être lu.
+  const oversized = Buffer.alloc(16 * 1024 * 1024 + 1, 0x20);
+  oversized.write('{"formatVersion":3}');
+
+  await expectRefusedImport(page, {
+    name: 'enorme.merise.json',
+    mimeType: 'application/json',
+    buffer: oversized,
+  });
+  await expect(page.getByText(/limite d'import/)).toBeVisible();
+});
+
 test('protège la suppression d’une entité référencée', async ({ page }) => {
   await page.getByTestId('entity-node-CLIENT').click();
   await page.getByRole('button', { name: "Supprimer l'entité" }).click();
@@ -235,4 +301,45 @@ test('l’import/export conserve le dialecte sélectionné', async ({ page }) =>
 
   await page.getByRole('tab', { name: 'SQL' }).click();
   await expect(page.getByTestId('sql-dialect-select')).toContainText('SQLite');
+});
+
+/**
+ * Les trois exemples livrés doivent s'ouvrir depuis le menu « Nouveau » et
+ * aller jusqu'au SQL sans le moindre problème de validation : ce sont les
+ * modèles sur lesquels un nouvel utilisateur juge l'outil.
+ */
+test('charge les exemples livrés jusqu’au SQL, sans problème de validation', async ({ page }) => {
+  await page.getByRole('button', { name: 'Nouveau' }).click();
+  await page.getByRole('menuitem', { name: 'Exemple : Boutique en ligne' }).click();
+  await expect(page.getByTestId('project-name-input')).toHaveValue('Boutique en ligne');
+  await expect(page.getByTestId('entity-node-PRODUIT')).toBeVisible();
+  // Association réflexive : CATEGORIE reliée à elle-même par des rôles.
+  await expect(page.getByTestId('association-node-REGROUPER')).toBeVisible();
+
+  await page.getByRole('tab', { name: 'Validation' }).click();
+  await expect(page.getByTestId('validation-panel')).toContainText('Aucun problème à afficher');
+
+  await page.getByRole('tab', { name: 'SQL' }).click();
+  // Association N,N porteuse d'attributs → table dédiée.
+  await expect(page.getByTestId('sql-code')).toContainText('CREATE TABLE "contenir"');
+
+  await page.getByRole('button', { name: 'Nouveau' }).click();
+  await page.getByRole('menuitem', { name: 'Exemple : Bibliothèque' }).click();
+  await expect(page.getByTestId('project-name-input')).toHaveValue('Bibliothèque');
+  await expect(page.getByTestId('association-node-EMPRUNTER')).toBeVisible();
+
+  await page.getByRole('tab', { name: 'Validation' }).click();
+  await expect(page.getByTestId('validation-panel')).toContainText('Aucun problème à afficher');
+
+  await page.getByRole('tab', { name: 'SQL' }).click();
+  const sql = page.getByTestId('sql-code');
+  // Association ternaire → table dédiée ; identifiant composé de RAYON →
+  // clé étrangère composée dans « ranger ».
+  await expect(sql).toContainText('CREATE TABLE "emprunter"');
+  await expect(sql).toContainText('"rayon_code_salle"');
+
+  // L'exemple de départ reste accessible.
+  await page.getByRole('button', { name: 'Nouveau' }).click();
+  await page.getByRole('menuitem', { name: "Exemple : Gestion d'hôtel" }).click();
+  await expect(page.getByTestId('entity-node-CHAMBRE')).toBeVisible();
 });

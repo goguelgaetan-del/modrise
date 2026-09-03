@@ -10,7 +10,25 @@ import { visualizer } from 'rollup-plugin-visualizer';
 // normal, ni de son propre poids ni de la page HTML qu'il génère.
 const analyze = process.env.ANALYZE === '1';
 
+// Chemin public sous lequel l'application sera servie. Il vaut `/` en
+// développement, en `pnpm preview` et pour les tests Playwright ; un
+// hébergement en sous-répertoire — GitHub Pages sert le dépôt sous
+// `/modrise/` — le surcharge via `BASE_PATH`. Vite réécrit alors les URL des
+// scripts, des feuilles de style et des fichiers de `public/`.
+// Voir docs/deployment.md.
+//
+// La normalisation est faite ici et pas dans le workflow : `configure-pages`
+// renvoie `/modrise` pour un site de projet mais `/` pour un domaine dédié,
+// et concaténer une barre oblique à l'aveugle produirait `//`.
+function resolveBase(value: string | undefined): string {
+  const trimmed = (value ?? '').trim().replace(/^\/*/, '').replace(/\/*$/, '');
+  return trimmed === '' ? '/' : `/${trimmed}/`;
+}
+
+const base = resolveBase(process.env.BASE_PATH);
+
 export default defineConfig({
+  base,
   plugins: [
     react(),
     tailwindcss(),

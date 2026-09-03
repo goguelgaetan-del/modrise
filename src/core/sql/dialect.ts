@@ -6,8 +6,11 @@
  * la première implémentation (v0.3.1) et `src/core/sql/registry.ts` pour le
  * registre des dialectes disponibles.
  *
- * TODO(v0.4+) : implémenter MySQL/MariaDB et SQLite dans des dossiers
- * frères de `postgresql/`, chacun couvrant les mêmes capacités.
+ * Trois dialectes sont livrés, dans des dossiers frères couvrant les mêmes
+ * capacités : `postgresql/` (v0.3.1), `mysql/` et `sqlite/` (v0.3.2). Ajouter
+ * un dialecte consiste à créer un dossier de plus, à l'enregistrer dans
+ * `registry.ts` et à étendre `SqlDialectId` — le moteur partagé de
+ * `shared/` fait le reste.
  */
 import type { ConceptualDataType } from '../conceptual-model/data-types';
 import type { LogicalModel } from '../logical-model/types';

@@ -15,7 +15,7 @@ agents:
   reviewer: codex
 
 git:
-  base_branch: feature/modeling-layout-v05
+  base_branch: main
   branch_prefix: leadev/
   use_worktrees: true
   auto_commit: true
