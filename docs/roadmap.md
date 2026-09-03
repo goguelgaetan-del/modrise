@@ -153,19 +153,19 @@ confiance qu'un utilisateur peut placer dans l'outil pour un travail réel.
       test vérifie que les fichiers livrés correspondent aux fabriques, que
       les trois exemples ne produisent aucun problème de validation et
       génèrent du SQL dans les trois dialectes
-- [ ] Déploiement public (hébergement statique) et release GitHub associée.
-      Le mécanisme est en place et vérifié — chemin de base réglable
-      (`BASE_PATH`), workflow `deploy.yml` restreint à `main`, et
-      `pnpm verify:static` qui sert le build sous `/modrise/` et le parcourt
-      dans Chromium jusqu'au SQL, en échouant sur toute requête perdue (voir
-      [deployment.md](deployment.md)). Restent à faire, et hors de portée
-      tant que la branche courante n'est pas fusionnée : activer GitHub Pages
-      sur la source « GitHub Actions », publier, vérifier l'URL publique dans
-      un navigateur, poser l'étiquette et écrire la release
+- [x] Déploiement public (hébergement statique) et release GitHub associée :
+      l'application est en ligne sur
+      <https://goguelgaetan-del.github.io/modrise/>, publiée par
+      `.github/workflows/deploy.yml` à chaque poussée sur `main`, avec un
+      chemin de base réglable (`BASE_PATH`) parce que Pages sert le dépôt sous
+      un sous-répertoire. La vérification n'est pas la lecture d'un journal
+      vert : `pnpm verify:static --url <url>` parcourt le site publié dans
+      Chromium jusqu'au SQL et échoue sur toute requête perdue (voir
+      [deployment.md](deployment.md))
 - [x] Politique de versionnage annoncée (que signifie une version majeure,
       mineure, corrective pour l'application _et_ pour le format) —
       [versioning.md](versioning.md), version de l'application alignée sur
-      `0.5.1` dans `package.json`
+      `1.0.0` dans `package.json`
 
 ### Non bloquants
 

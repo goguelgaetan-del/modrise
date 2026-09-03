@@ -9,6 +9,10 @@
  * exactement cette situation : build avec `base`, service du dossier `dist`
  * sous ce même préfixe, puis parcours dans Chromium.
  *
+ * Le même parcours sert à vérifier le site déjà publié, avec `--url` : c'est
+ * la vérification navigateur exigée par docs/release-checklist.md, exécutée
+ * plutôt que constatée à l'œil.
+ *
  * Toute requête en échec et toute erreur de console font échouer le script :
  * un asset introuvable ne doit pas passer inaperçu sous prétexte que la page
  * s'affiche quand même.
@@ -16,6 +20,7 @@
  * Usage :
  *   node scripts/verify-static-build.mjs            # build + vérification
  *   node scripts/verify-static-build.mjs --no-build # réutilise `dist/`
+ *   node scripts/verify-static-build.mjs --url https://exemple/modrise/
  *   BASE_PATH=/autre/ node scripts/verify-static-build.mjs
  */
 import { dirname, join } from 'node:path';
@@ -26,6 +31,18 @@ import { chromium } from '@playwright/test';
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const base = process.env.BASE_PATH ?? '/modrise/';
 const skipBuild = process.argv.includes('--no-build');
+
+/** URL déjà publiée à vérifier, ou `null` pour construire et servir en local. */
+function resolveRemoteUrl(argv) {
+  const index = argv.indexOf('--url');
+  if (index === -1) return null;
+  const value = argv[index + 1];
+  if (!value || value.startsWith('--')) throw new Error('« --url » attend une URL.');
+  // Une base sans barre finale ferait résoudre `favicon.svg` un cran trop haut.
+  return value.endsWith('/') ? value : `${value}/`;
+}
+
+const remoteUrl = resolveRemoteUrl(process.argv);
 
 /** Attend qu'un sélecteur devienne visible, avec un message d'échec lisible. */
 async function expectVisible(page, testId, timeout = 15_000) {
@@ -52,42 +69,11 @@ async function expectValue(page, testId, expected, timeout = 15_000) {
   );
 }
 
-if (!skipBuild) {
-  process.stdout.write(`Build avec base « ${base} »…\n`);
-  await build({ root, configFile: join(root, 'vite.config.ts'), base, logLevel: 'warn' });
-}
-
-const server = await preview({
-  root,
-  configFile: join(root, 'vite.config.ts'),
-  base,
-  preview: { port: 4173, strictPort: true },
-  logLevel: 'warn',
-});
-
-const url = server.resolvedUrls?.local?.[0];
-if (!url) throw new Error("Le serveur d'aperçu n'a pas d'URL locale.");
-if (!new URL(url).pathname.endsWith(base)) {
-  throw new Error(`L'URL servie (${url}) ne correspond pas à la base « ${base} ».`);
-}
-
-const browser = await chromium.launch();
-const problems = [];
-
-try {
-  const page = await browser.newPage();
-  page.on('console', (message) => {
-    if (message.type() === 'error') problems.push(`console: ${message.text()}`);
-  });
-  page.on('pageerror', (error) => problems.push(`exception: ${error.message}`));
-  page.on('requestfailed', (request) => {
-    problems.push(`requête échouée: ${request.url()} (${request.failure()?.errorText ?? '?'})`);
-  });
-  page.on('response', (response) => {
-    if (response.status() >= 400)
-      problems.push(`HTTP ${String(response.status())}: ${response.url()}`);
-  });
-
+/**
+ * Parcours commun au build local et au site publié : charger, créer un projet,
+ * le retrouver après rechargement, atteindre le SQL, avoir une icône.
+ */
+async function runJourney(page, url, problems) {
   process.stdout.write(`Vérification de ${url}…\n`);
   await page.goto(url, { waitUntil: 'networkidle' });
 
@@ -114,6 +100,50 @@ try {
   // 4. L'icône déclarée dans `index.html` doit exister sous la base.
   const favicon = await page.request.get(new URL('favicon.svg', url).toString());
   if (!favicon.ok()) problems.push(`favicon absent : HTTP ${String(favicon.status())}`);
+}
+
+let server = null;
+let url = remoteUrl;
+
+if (!remoteUrl) {
+  if (!skipBuild) {
+    process.stdout.write(`Build avec base « ${base} »…\n`);
+    await build({ root, configFile: join(root, 'vite.config.ts'), base, logLevel: 'warn' });
+  }
+
+  server = await preview({
+    root,
+    configFile: join(root, 'vite.config.ts'),
+    base,
+    preview: { port: 4173, strictPort: true },
+    logLevel: 'warn',
+  });
+
+  url = server.resolvedUrls?.local?.[0];
+  if (!url) throw new Error("Le serveur d'aperçu n'a pas d'URL locale.");
+  if (!new URL(url).pathname.endsWith(base)) {
+    throw new Error(`L'URL servie (${url}) ne correspond pas à la base « ${base} ».`);
+  }
+}
+
+const browser = await chromium.launch();
+const problems = [];
+
+try {
+  const page = await browser.newPage();
+  page.on('console', (message) => {
+    if (message.type() === 'error') problems.push(`console: ${message.text()}`);
+  });
+  page.on('pageerror', (error) => problems.push(`exception: ${error.message}`));
+  page.on('requestfailed', (request) => {
+    problems.push(`requête échouée: ${request.url()} (${request.failure()?.errorText ?? '?'})`);
+  });
+  page.on('response', (response) => {
+    if (response.status() >= 400)
+      problems.push(`HTTP ${String(response.status())}: ${response.url()}`);
+  });
+
+  await runJourney(page, url, problems);
 } catch (error) {
   // Le parcours s'arrête à la première étape manquante, mais les requêtes en
   // échec déjà collectées expliquent presque toujours pourquoi : on les
@@ -121,13 +151,15 @@ try {
   problems.push(error instanceof Error ? error.message : String(error));
 } finally {
   await browser.close();
-  await server.close();
+  if (server) await server.close();
 }
 
 if (problems.length > 0) {
   process.stderr.write(`\n${String(problems.length)} problème(s) :\n`);
   for (const problem of problems) process.stderr.write(`  - ${problem}\n`);
   process.exitCode = 1;
+} else if (remoteUrl) {
+  process.stdout.write(`\nOK — site publié vérifié dans Chromium : ${url}\n`);
 } else {
   process.stdout.write(`\nOK — build statique servi sous « ${base} » vérifié dans Chromium.\n`);
 }

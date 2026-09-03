@@ -8,7 +8,8 @@ les projets vivent dans l'IndexedDB du navigateur et n'en sortent jamais
 
 N'importe quel hébergeur de fichiers statiques convient donc. Le dépôt est
 configuré pour GitHub Pages, qui a l'avantage de ne dépendre d'aucun compte
-supplémentaire.
+supplémentaire. Le site est publié à l'adresse
+<https://goguelgaetan-del.github.io/modrise/>.
 
 ## Le seul vrai piège : le chemin de base
 
@@ -60,6 +61,16 @@ la page finit par s'afficher. `--no-build` réutilise le `dist/` existant, ce
 qui permet aussi de vérifier qu'un build fait à la racine échoue bien sous un
 sous-répertoire.
 
+Le même parcours s'applique à un site déjà publié :
+
+```bash
+pnpm verify:static --url https://goguelgaetan-del.github.io/modrise/
+```
+
+Ni build ni serveur local dans ce mode : Chromium visite l'URL donnée. C'est
+la vérification exigée après publication, exécutée plutôt que constatée à
+l'œil.
+
 ## Le workflow
 
 `.github/workflows/deploy.yml` s'exécute sur `main` uniquement, plus à la
@@ -78,7 +89,8 @@ CI verte sur `main` avant de poser une étiquette.
 
 ## Activer Pages la première fois
 
-À faire une seule fois, sur le dépôt, par une personne ayant les droits
+C'est fait sur ce dépôt depuis la v1.0 ; la procédure reste ici pour un fork
+ou un autre dépôt. À faire une seule fois, par une personne ayant les droits
 d'administration :
 
 1. `Settings` → `Pages` → `Build and deployment` → `Source` : **GitHub
@@ -101,13 +113,20 @@ explicite et aucun site n'est publié par accident.
 ## Vérification après publication
 
 La liste de contrôle demande une vérification **dans un navigateur**, pas la
-lecture d'un journal vert. Sur l'URL publique :
+lecture d'un journal vert. Un déploiement `success` prouve seulement qu'un
+artefact a été téléversé, jamais qu'il s'exécute sous sa base.
 
-- l'application se charge, sans erreur dans la console ;
-- un projet vide se crée, l'indicateur passe à « Enregistré localement » ;
-- un rechargement retrouve le projet ;
-- un exemple s'ouvre et l'onglet SQL produit un script ;
-- l'export `.merise.json` se télécharge et se réimporte.
+```bash
+pnpm verify:static --url https://goguelgaetan-del.github.io/modrise/
+```
+
+Le script rejoue sur l'URL publique le parcours décrit plus haut — chargement,
+ouverture d'un exemple, rechargement qui retrouve le projet, onglet SQL,
+favicon — et échoue sur toute requête perdue ou erreur de console. Il a été
+exécuté avec succès sur le commit étiqueté `v1.0.0`.
+
+Restent à faire à la main, parce qu'ils passent par le gestionnaire de
+téléchargements du navigateur : l'export `.merise.json` puis son réimport.
 
 ## Autre hébergeur
 

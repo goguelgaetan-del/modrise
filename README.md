@@ -119,8 +119,9 @@ configuré pour GitHub Pages (`.github/workflows/deploy.yml`, déclenché sur
 sous-répertoire. La procédure, le piège du chemin de base et la vérification
 navigateur sont décrits dans [docs/deployment.md](docs/deployment.md).
 
-GitHub Pages n'est pas encore activé sur ce dépôt : aucune URL publique n'est
-donc annoncée ici pour l'instant.
+L'application est en ligne : **<https://goguelgaetan-del.github.io/modrise/>**.
+Rien n'y est installé et aucun compte n'est requis ; les projets restent dans
+l'IndexedDB du navigateur.
 
 ## Contribution
 

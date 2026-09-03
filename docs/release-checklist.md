@@ -78,8 +78,11 @@ Procédure détaillée : [deployment.md](deployment.md).
 - [ ] Étiquette Git posée sur le commit de `main` réellement testé
 - [ ] Release GitHub créée, avec les notes de version
 - [ ] Déploiement statique effectué, puis **vérifié dans un navigateur sur
-      l'URL publique** : l'application se charge, crée un projet, sauvegarde,
-      recharge, ouvre un exemple et génère du SQL
+      l'URL publique** avec `pnpm verify:static --url <url>` : l'application
+      se charge, ouvre un exemple, sauvegarde, recharge et génère du SQL,
+      sans requête en échec ni erreur de console
+- [ ] Export `.merise.json` téléchargé puis réimporté depuis l'URL publique
+      (seul point que le script ne peut pas couvrir)
 - [ ] URL publique renseignée dans `About` du dépôt et dans `README.md`
 
 ## Règle
